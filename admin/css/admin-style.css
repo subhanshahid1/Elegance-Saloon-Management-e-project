@@ -1,0 +1,95 @@
+:root {
+    --gold: #C9A84C;
+    --gold-hover: #b3943d;
+    --charcoal: #1C1C1E;
+    --sidebar-width: 260px;
+    --bg-light: #f8f9fa;
+    --transition: all 0.3s ease;
+}
+
+body {
+    background-color: var(--bg-light);
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* THE FIX: Layout Wrapper */
+.main-wrapper {
+    display: flex; /* Sidebar and Content sit side-by-side */
+    align-items: stretch;
+    width: 100%;
+}
+
+/* Sidebar: Fixed width on Desktop */
+#sidebar {
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    background-color: var(--charcoal);
+    color: #fff;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    transition: var(--transition);
+    z-index: 1000;
+}
+
+/* Content Area: Takes up remaining space */
+#content-area {
+    flex-grow: 1;
+    min-width: 0; /* Prevents layout breaking */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Sidebar Links */
+#sidebar .nav-link {
+    color: #a3a3a3;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    border-left: 4px solid transparent;
+}
+
+#sidebar .nav-link.active {
+    background-color: rgba(201, 168, 76, 0.1);
+    color: var(--gold);
+    border-left: 4px solid var(--gold);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        left: -260px;
+        z-index: 2000;
+    }
+    #sidebar.active {
+        left: 0;
+    }
+    #sidebar-overlay.active {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 1500;
+        display: block !important;
+    }
+}
+
+/* General Elegance Card */
+.elegance-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.btn-elegance {
+    background: var(--gold);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+}
