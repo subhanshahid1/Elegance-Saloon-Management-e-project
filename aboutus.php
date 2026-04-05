@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>About Us - Elegance Saloon</title>
-  <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+  <link rel="stylesheet" href="assets/css/style.css">
 
   <style>
 
@@ -622,8 +622,8 @@
 
 <?php include('includes/footer.php'); ?>
 
-<script src="js/bootstrap.bundle.min.js"></script>
-<script src="js/script.js"></script>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/script.js"></script>
 
 </body>
 </html>
