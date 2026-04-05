@@ -1,3 +1,7 @@
+<?php
+require_once '../includes/auth.php';
+checkAccess(['admin', 'receptionist']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

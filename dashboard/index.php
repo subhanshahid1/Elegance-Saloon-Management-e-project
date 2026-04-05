@@ -1,6 +1,8 @@
 <?php 
   // index.php
   $pageTitle = "Dashboard Overview";
+  require_once '../includes/auth.php';
+  checkAccess(['admin', 'receptionist', 'stylist']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
