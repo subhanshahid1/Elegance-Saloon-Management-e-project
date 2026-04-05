@@ -1,5 +1,4 @@
 <?php
-
 /*  DATABASE CONFIGURATION */
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');        
