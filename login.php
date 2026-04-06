@@ -374,13 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- --- Password --- -->
                 <div class="form-gap">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <label class="form-label-sm">Password</label>
-                        <a href="<?php echo SITE_URL; ?>/forgot_password.php"
-                            style="font-size:11px; color:var(--gold); text-decoration:none;">
-                            Forgot password?
-                        </a>
-                    </div>
+                    <label class="form-label-sm">Password</label>
                     <div class="input-group-custom">
                         <i class="bi bi-lock input-icon"></i>
                         <input
@@ -393,6 +387,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <button type="button" class="toggle-password" onclick="togglePass()">
                             <i class="bi bi-eye" id="eye-icon"></i>
                         </button>
+                    </div>
+                    <!-- ===== FORGOT PASSWORD LINK — below input ===== -->
+                    <div style="text-align:right; margin-top:6px;">
+                        <a href="<?php echo SITE_URL; ?>/forgot_password.php"
+                            style="font-size:11px; color:var(--gold); text-decoration:none;">
+                            Forgot password?
+                        </a>
                     </div>
                 </div>
 
