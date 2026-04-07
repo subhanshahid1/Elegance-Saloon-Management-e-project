@@ -4,7 +4,7 @@ require_once '../includes/db.php';
 
 checkAccess(['admin', 'receptionist']);
 
-// 1. Fetch Stats (Reverted to the design you liked)
+// 1. Fetch Stats
 $totalServices = $conn->query("SELECT COUNT(*) as total FROM services")->fetch_assoc()['total'] ?? 0;
 $activeServices = $conn->query("SELECT COUNT(*) as total FROM services WHERE status = 'active'")->fetch_assoc()['total'] ?? 0;
 $inactiveServices = $conn->query("SELECT COUNT(*) as total FROM services WHERE status = 'inactive'")->fetch_assoc()['total'] ?? 0;
@@ -16,10 +16,53 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Management | Elegance Salon</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <style>
+        /* Responsive Fixes */
+        .content-area { padding: 1.5rem; }
+        
+        @media (max-width: 768px) {
+            .content-area { padding: 1rem; }
+            .panel-title { font-size: 1.5rem; }
+            .btn-gold { width: 100%; justify-content: center; }
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .table-responsive {
+            border-radius: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    </style>
 </head>
 <body>
     <?php include('../includes/sidebar.php'); ?>
@@ -27,21 +70,21 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
     <div class="main-area">
         <?php include('../includes/topbar.php'); ?>
 
-        <div class="content-area">
+        <div class="content-area container-fluid">
             <div class="row align-items-center mb-4">
                 <div class="col-12 d-md-flex justify-content-between align-items-center">
-                    <div>
+                    <div class="mb-3 mb-md-0">
                         <h2 class="panel-title fs-3">Service Menu</h2>
                         <p class="panel-subtitle">Manage salon offerings and categories</p>
                     </div>
-                    <button class="btn-gold mt-3 mt-md-0" onclick="openModal('addModal')">
+                    <button class="btn-gold" onclick="openModal('addModal')">
                         <i class="bi bi-plus-lg"></i> Add New Service
                     </button>
                 </div>
             </div>
 
             <div class="row mb-4 g-3">
-                <div class="col-md-4">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid var(--gold);">
                         <div class="fs-2 text-gold"><i class="bi bi-scissors"></i></div>
                         <div>
@@ -50,7 +93,7 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-sm-6 col-md-4">
                     <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #198754;">
                         <div class="fs-2 text-success"><i class="bi bi-check-circle-fill"></i></div>
                         <div>
@@ -59,7 +102,7 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #dc3545;">
                         <div class="fs-2 text-danger"><i class="bi bi-pause-circle-fill"></i></div>
                         <div>
@@ -72,7 +115,7 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
 
             <div class="panel">
                 <div class="table-responsive">
-                    <table class="table custom-table">
+                    <table class="table custom-table mb-0">
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -112,49 +155,49 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
 
     <div class="modal-overlay" id="addModal">
         <div class="modal-box">
-            <div class="panel-header">
-                <div class="panel-title">Add New Service</div>
+            <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <div class="panel-title m-0">Add New Service</div>
                 <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="service_proc.php" method="POST">
-                <div class="panel-body">
-                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="add_name" class="form-input" required></div>
-                    <div class="row">
-                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="add_category" class="form-input" placeholder="e.g. Hair"></div>
-                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="add_price" class="form-input" required></div>
+                <div class="panel-body p-3">
+                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="add_name" class="form-control" required></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="add_category" class="form-control" placeholder="e.g. Hair"></div>
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="add_price" class="form-control" required></div>
                     </div>
-                    <div class="mb-3"><label class="form-label fw-bold small">Duration (Mins)</label><input type="number" name="add_duration" class="form-input" value="30"></div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Duration (Mins)</label><input type="number" name="add_duration" class="form-control" value="30"></div>
                 </div>
-                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_add" class="btn-gold">Save Service</button></div>
+                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_add" class="btn-gold px-4">Save Service</button></div>
             </form>
         </div>
     </div>
 
     <div class="modal-overlay" id="editModal">
         <div class="modal-box">
-            <div class="panel-header">
-                <div class="panel-title">Edit Service</div>
+            <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <div class="panel-title m-0">Edit Service</div>
                 <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="service_proc.php" method="POST">
                 <input type="hidden" name="upd_id" id="field_id">
-                <div class="panel-body">
-                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="upd_name" id="field_name" class="form-input" required></div>
-                    <div class="row">
-                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="upd_category" id="field_category" class="form-input"></div>
-                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="upd_price" id="field_price" class="form-input" required></div>
+                <div class="panel-body p-3">
+                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="upd_name" id="field_name" class="form-control" required></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="upd_category" id="field_category" class="form-control"></div>
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="upd_price" id="field_price" class="form-control" required></div>
                     </div>
-                    <div class="row">
-                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Duration</label><input type="number" name="upd_duration" id="field_duration" class="form-input"></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Duration</label><input type="number" name="upd_duration" id="field_duration" class="form-control"></div>
                         <div class="col-6 mb-3"><label class="form-label fw-bold small">Status</label>
-                            <select name="upd_status" id="field_status" class="form-input">
+                            <select name="upd_status" id="field_status" class="form-select">
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
                         </div>
                     </div>
                 </div>
-                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_update" class="btn-gold">Update Changes</button></div>
+                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_update" class="btn-gold px-4">Update Changes</button></div>
             </form>
         </div>
     </div>
@@ -171,6 +214,13 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
         }
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+        
+        // Close modal when clicking outside box
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                closeModal();
+            }
+        }
     </script>
 </body>
 </html>
