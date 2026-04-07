@@ -29,7 +29,7 @@ $result = $conn->query($query);
         <div class="content-area">
             <?php if(isset($_GET['msg'])): ?>
                 <?php if($_GET['msg'] == 'email_exists'): ?>
-                    <div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle-fill me-2"></i> Error: This email is already registered to another user.</div>
+                    <div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle-fill me-2"></i> Error: This email is already registered.</div>
                 <?php elseif($_GET['msg'] == 'added'): ?>
                     <div class="alert alert-success">Staff member added successfully!</div>
                 <?php elseif($_GET['msg'] == 'updated'): ?>
@@ -88,7 +88,9 @@ $result = $conn->query($query);
                                     <small class="d-block"><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($row['email']); ?></small>
                                     <small class="d-block"><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($row['phone'] ?? 'N/A'); ?></small>
                                 </td>
-                                <td><?php echo ($row['role'] == 'stylist') ? $row['commission_rate'].'%' : 'N/A'; ?></td>
+                                <td class="fw-bold">
+                                    <?php echo (isset($row['commission_rate']) && $row['commission_rate'] > 0) ? $row['commission_rate'].'%' : '0%'; ?>
+                                </td>
                                 <td>
                                     <span class="badge <?php echo ($row['status'] == 'active') ? 'bg-success' : 'bg-danger'; ?>">
                                         <?php echo strtoupper($row['status']); ?>
@@ -118,10 +120,7 @@ $result = $conn->query($query);
             <form action="staff_proc.php" method="POST">
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Full Name</label>
-                            <input type="text" name="name" class="form-input" required>
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Full Name</label><input type="text" name="name" class="form-input" required></div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold">Role</label>
                             <select name="role" class="form-input" required>
@@ -132,29 +131,14 @@ $result = $conn->query($query);
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Email Address</label>
-                            <input type="email" name="email" class="form-input" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Phone Number</label>
-                            <input type="text" name="phone" class="form-input">
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Email Address</label><input type="email" name="email" class="form-input" required></div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Phone Number</label><input type="text" name="phone" class="form-input"></div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Commission Rate (%)</label>
-                            <input type="number" step="0.01" name="commission_rate" class="form-input" value="0.00">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Password</label>
-                            <input type="password" name="password" class="form-input" required>
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Commission Rate (%)</label><input type="number" step="0.01" name="commission_rate" class="form-input" value="0.00"></div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Password</label><input type="password" name="password" class="form-input" required></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Work Schedule</label>
-                        <textarea name="work_schedule" class="form-input" rows="2" placeholder="e.g. Mon-Fri, 9AM-6PM"></textarea>
-                    </div>
+                    <div class="mb-3"><label class="form-label small fw-bold">Work Schedule</label><textarea name="work_schedule" class="form-input" rows="2" placeholder="e.g. Mon-Fri, 9AM-6PM"></textarea></div>
                 </div>
                 <div class="panel-header border-top justify-content-end gap-2">
                     <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
@@ -174,10 +158,7 @@ $result = $conn->query($query);
                 <input type="hidden" name="staff_id" id="edit_staff_id">
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Full Name</label>
-                            <input type="text" name="name" id="edit_staff_name" class="form-input" required>
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Full Name</label><input type="text" name="name" id="edit_staff_name" class="form-input" required></div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold">Status</label>
                             <select name="status" id="edit_staff_status" class="form-input">
@@ -187,29 +168,14 @@ $result = $conn->query($query);
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Email</label>
-                            <input type="email" name="email" id="edit_staff_email" class="form-input" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Phone</label>
-                            <input type="text" name="phone" id="edit_staff_phone" class="form-input">
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Email</label><input type="email" name="email" id="edit_staff_email" class="form-input" required></div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Phone</label><input type="text" name="phone" id="edit_staff_phone" class="form-input"></div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">Commission Rate (%)</label>
-                            <input type="number" step="0.01" name="commission_rate" id="edit_staff_commission" class="form-input">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label small fw-bold">New Password (Optional)</label>
-                            <input type="password" name="password" class="form-input" placeholder="Leave blank to keep current">
-                        </div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">Commission Rate (%)</label><input type="number" step="0.01" name="commission_rate" id="edit_staff_commission" class="form-input"></div>
+                        <div class="col-md-6 mb-3"><label class="form-label small fw-bold">New Password (Optional)</label><input type="password" name="password" class="form-input" placeholder="Leave blank to keep current"></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Work Schedule</label>
-                        <textarea name="work_schedule" id="edit_staff_schedule" class="form-input" rows="2"></textarea>
-                    </div>
+                    <div class="mb-3"><label class="form-label small fw-bold">Work Schedule</label><textarea name="work_schedule" id="edit_staff_schedule" class="form-input" rows="2"></textarea></div>
                 </div>
                 <div class="panel-header border-top justify-content-end gap-2">
                     <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
@@ -219,11 +185,9 @@ $result = $conn->query($query);
         </div>
     </div>
 
-    <script src="../assets/js/dashboard.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const editButtons = document.querySelectorAll('.edit-staff-btn');
-        editButtons.forEach(btn => {
+        document.querySelectorAll('.edit-staff-btn').forEach(btn => {
             btn.onclick = function() {
                 const staff = JSON.parse(this.getAttribute('data-item'));
                 document.getElementById('edit_staff_id').value = staff.id;
