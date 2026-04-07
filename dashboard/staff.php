@@ -204,5 +204,7 @@ $result = $conn->query($query);
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     </script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>
