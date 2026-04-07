@@ -1,6 +1,15 @@
 <?php
 require_once '../includes/auth.php';
+require_once '../includes/db.php';
+
+// Check access: Only Admin and Receptionist
 checkAccess(['admin', 'receptionist']);
+
+$loggedInRole = getUserRole();
+
+// Fetch inventory items - ordered by quantity to show low stock first
+$query = "SELECT * FROM inventory ORDER BY quantity ASC";
+$result = $conn->query($query);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,216 +19,211 @@ checkAccess(['admin', 'receptionist']);
     <title>Inventory | Elegance Salon</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
-
     <style>
-        /* ===== INVENTORY SPECIFIC STYLES ===== */
-        .inv-item-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .inv-img-placeholder {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            background: var(--cream);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gold);
-            border: 1px solid rgba(0,0,0,0.05);
-            flex-shrink: 0;
-        }
-        .inv-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 12px;
-        }
-        .inv-name-main {
-            font-weight: 500;
-            display: block;
-        }
-        .inv-category {
-            font-size: 11px;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .stock-count {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 16px;
-        }
-        
-        @media (max-width: 768px) {
-            .hide-mobile { display: none; }
-        }
+        .badge-low-stock { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; padding: 4px 8px; border-radius: 4px; }
+        .badge-in-stock { background-color: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 4px 8px; border-radius: 4px; }
     </style>
 </head>
 <body>
-
     <?php include('../includes/sidebar.php'); ?>
 
     <div class="main-area">
         <?php include('../includes/topbar.php'); ?>
 
         <div class="content-area">
-            
-            <div class="row g-3 align-items-center section-gap">
-                <div class="col-12 col-md-6">
-                    <h2 class="panel-title fs-3">Inventory & Supplies</h2>
-                    <p class="panel-subtitle">Track stock levels and manage product orders</p>
-                </div>
-                <div class="col-12 col-md-6 d-flex justify-content-md-end gap-2">
-                    <button class="btn-outline">
-                        <i class="bi bi-cart-plus"></i> Order Supplies
+            <div class="row align-items-center mb-4">
+                <div class="col-12 d-md-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="panel-title fs-3">Stock Inventory</h2>
+                        <p class="panel-subtitle">Manage salon products and supplies</p>
+                    </div>
+                    <button class="btn-gold mt-3 mt-md-0" onclick="openModal('addItemModal')">
+                        <i class="bi bi-plus-lg"></i> Add New Item
                     </button>
-                    <button class="btn-gold">
-                        <i class="bi bi-plus-lg"></i> Add New Product
-                    </button>
-                </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-md-3">
-                    <div class="panel p-3 text-center">
-                        <div class="panel-subtitle">Total Items</div>
-                        <div class="stock-count">142</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="panel p-3 text-center">
-                        <div class="panel-subtitle">Low Stock</div>
-                        <div class="stock-count text-warning">8</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="panel p-3 text-center">
-                        <div class="panel-subtitle">Out of Stock</div>
-                        <div class="stock-count text-danger">2</div>
-                    </div>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="panel p-3 text-center">
-                        <div class="panel-subtitle">Inventory Value</div>
-                        <div class="stock-count">₨185k</div>
-                    </div>
                 </div>
             </div>
 
             <div class="panel">
-                <div class="panel-header">
-                    <div class="tab-pills">
-                        <button class="tab-pill active" onclick="activateTab(this)">All Products</button>
-                        <button class="tab-pill" onclick="activateTab(this)">Hair Care</button>
-                        <button class="tab-pill" onclick="activateTab(this)">Skin Care</button>
-                        <button class="tab-pill" onclick="activateTab(this)">Tools</button>
-                    </div>
-                </div>
                 <div class="table-responsive">
-                    <table class="data-table">
+                    <table class="table custom-table">
                         <thead>
                             <tr>
-                                <th>Product Details</th>
+                                <th>Product Name</th>
                                 <th>Category</th>
-                                <th style="width: 250px;">Stock Level</th>
-                                <th class="hide-mobile">Price</th>
+                                <th>Stock</th>
+                                <th>Cost/Unit</th>
+                                <th>Supplier</th>
                                 <th>Status</th>
-                                <th class="text-end">Actions</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>
-                                    <div class="inv-item-info">
-                                        <div class="inv-img-placeholder"><i class="bi bi-droplet-fill"></i></div>
-                                        <div>
-                                            <span class="inv-name-main">Shampoo Refill (5L)</span>
-                                            <span class="small text-muted">L'Oreal Professional</span>
+                            <?php if ($result->num_rows > 0): ?>
+                                <?php while($item = $result->fetch_assoc()): 
+                                    $isLow = ($item['quantity'] <= $item['reorder_level']);
+                                    // Robust data encoding for JS
+                                    $itemData = htmlspecialchars(json_encode($item), ENT_QUOTES, 'UTF-8');
+                                ?>
+                                <tr>
+                                    <td class="fw-bold"><?php echo htmlspecialchars($item['name']); ?></td>
+                                    <td><span class="badge bg-light text-dark"><?php echo htmlspecialchars($item['category']); ?></span></td>
+                                    <td>
+                                        <span class="<?php echo $isLow ? 'text-danger fw-bold' : ''; ?>">
+                                            <?php echo $item['quantity']; ?> units
+                                        </span>
+                                    </td>
+                                    <td>Rs. <?php echo number_format($item['cost_per_unit'], 2); ?></td>
+                                    <td><?php echo htmlspecialchars($item['supplier']); ?></td>
+                                    <td>
+                                        <?php if($isLow): ?>
+                                            <span class="badge-low-stock" style="font-size: 10px;">LOW STOCK</span>
+                                        <?php else: ?>
+                                            <span class="badge-in-stock" style="font-size: 10px;">IN STOCK</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-outline-secondary edit-btn" 
+                                                    data-item='<?php echo $itemData; ?>'>
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <a href="inventory_proc.php?delete_id=<?php echo $item['id']; ?>" 
+                                               class="btn btn-sm btn-outline-danger" 
+                                               onclick="return confirm('Delete this item permanently?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
                                         </div>
-                                    </div>
-                                </td>
-                                <td><span class="inv-category">Hair Care</span></td>
-                                <td>
-                                    <div class="inv-label">
-                                        <span>Current: 12%</span>
-                                        <span>Goal: 100%</span>
-                                    </div>
-                                    <div class="inv-bar"><div class="inv-fill critical" style="width: 12%;"></div></div>
-                                </td>
-                                <td class="hide-mobile">₨4,500</td>
-                                <td><span class="badge-critical">Critical</span></td>
-                                <td class="text-end">
-                                    <button class="logout-btn text-dark me-2"><i class="bi bi-plus-circle"></i></button>
-                                    <button class="logout-btn"><i class="bi bi-pencil"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="inv-item-info">
-                                        <div class="inv-img-placeholder"><i class="bi bi-magic"></i></div>
-                                        <div>
-                                            <span class="inv-name-main">Golden Brown Tint</span>
-                                            <span class="small text-muted">Wella Koleston</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td><span class="inv-category">Color</span></td>
-                                <td>
-                                    <div class="inv-label">
-                                        <span>Current: 28%</span>
-                                        <span>Goal: 100%</span>
-                                    </div>
-                                    <div class="inv-bar"><div class="inv-fill low" style="width: 28%;"></div></div>
-                                </td>
-                                <td class="hide-mobile">₨1,200</td>
-                                <td><span class="badge-low">Low Stock</span></td>
-                                <td class="text-end">
-                                    <button class="logout-btn text-dark me-2"><i class="bi bi-plus-circle"></i></button>
-                                    <button class="logout-btn"><i class="bi bi-pencil"></i></button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="inv-item-info">
-                                        <div class="inv-img-placeholder"><i class="bi bi-wind"></i></div>
-                                        <div>
-                                            <span class="inv-name-main">Argan Oil Serum</span>
-                                            <span class="small text-muted">Moroccanoil</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td><span class="inv-category">Styling</span></td>
-                                <td>
-                                    <div class="inv-label">
-                                        <span>Current: 85%</span>
-                                        <span>Goal: 100%</span>
-                                    </div>
-                                    <div class="inv-bar"><div class="inv-fill ok" style="width: 85%;"></div></div>
-                                </td>
-                                <td class="hide-mobile">₨3,800</td>
-                                <td><span class="badge-ok">In Stock</span></td>
-                                <td class="text-end">
-                                    <button class="logout-btn text-dark me-2"><i class="bi bi-plus-circle"></i></button>
-                                    <button class="logout-btn"><i class="bi bi-pencil"></i></button>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr><td colspan="7" class="text-center py-4 text-muted">No inventory items found.</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
 
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <div class="modal-overlay" id="addItemModal">
+        <div class="modal-box">
+            <div class="panel-header">
+                <div class="panel-title">Add Inventory Item</div>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="inventory_proc.php" method="POST">
+                <div class="panel-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Product Name</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Category</label>
+                            <input type="text" name="category" class="form-input" placeholder="e.g. Hair Care">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Supplier</label>
+                            <input type="text" name="supplier" class="form-input">
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Quantity</label>
+                            <input type="number" name="quantity" class="form-input" value="0" required>
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Reorder Level</label>
+                            <input type="number" name="reorder_level" class="form-input" value="10" required>
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Cost/Unit</label>
+                            <input type="number" step="0.01" name="cost" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-header border-top justify-content-end gap-2">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" name="add_item" class="btn-gold">Add to Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editItemModal">
+        <div class="modal-box">
+            <div class="panel-header">
+                <div class="panel-title">Edit Inventory Item</div>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="inventory_proc.php" method="POST">
+                <input type="hidden" name="item_id" id="edit_id">
+                <div class="panel-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Product Name</label>
+                        <input type="text" name="name" id="edit_name" class="form-input" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Category</label>
+                            <input type="text" name="category" id="edit_category" class="form-input">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="form-label small fw-bold">Supplier</label>
+                            <input type="text" name="supplier" id="edit_supplier" class="form-input">
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Quantity</label>
+                            <input type="number" name="quantity" id="edit_quantity" class="form-input" required>
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Reorder Level</label>
+                            <input type="number" name="reorder_level" id="edit_reorder" class="form-input" required>
+                        </div>
+                        <div class="col-4 mb-3">
+                            <label class="form-label small fw-bold">Cost/Unit</label>
+                            <input type="number" step="0.01" name="cost" id="edit_cost" class="form-input" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-header border-top justify-content-end gap-2">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" name="update_item" class="btn-gold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../assets/js/dashboard.js"></script>
     <script>
-        // ===== PAGE NAVIGATION =====
-        document.getElementById('page-title').textContent = "Inventory Management";
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle Edit Button Clicks
+        const editButtons = document.querySelectorAll('.edit-btn');
+        editButtons.forEach(btn => {
+            btn.onclick = function() {
+                const item = JSON.parse(this.getAttribute('data-item'));
+                
+                // Fill modal fields
+                document.getElementById('edit_id').value = item.id;
+                document.getElementById('edit_name').value = item.name;
+                document.getElementById('edit_category').value = item.category;
+                document.getElementById('edit_supplier').value = item.supplier;
+                document.getElementById('edit_quantity').value = item.quantity;
+                document.getElementById('edit_reorder').value = item.reorder_level;
+                document.getElementById('edit_cost').value = item.cost_per_unit;
+                
+                openModal('editItemModal');
+            };
+        });
+    });
+
+    // Helper functions in case they are missing from dashboard.js
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     </script>
 </body>
 </html>
