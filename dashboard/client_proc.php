@@ -2,53 +2,28 @@
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 
-checkAccess(['admin', 'receptionist']);
+if (isset($_POST['save_client'])) {
+    $id      = (int)$_POST['c_id'];
+    $name    = $conn->real_escape_string($_POST['c_name']);
+    $phone   = $conn->real_escape_string($_POST['c_phone']);
+    $email   = $conn->real_escape_string($_POST['c_email']);
+    $dob     = !empty($_POST['c_dob']) ? "'".$conn->real_escape_string($_POST['c_dob'])."'" : "NULL";
+    $stylist = !empty($_POST['c_stylist']) ? (int)$_POST['c_stylist'] : "NULL";
+    $prefs   = $conn->real_escape_string($_POST['c_prefs']);
 
-// 1. ADD CLIENT
-if (isset($_POST['add_client'])) {
-    $name = $conn->real_escape_string($_POST['name']);
-    $email = $conn->real_escape_string($_POST['email']);
-    $phone = $conn->real_escape_string($_POST['phone']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $role = 'client';
-
-    $stmt = $conn->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssss", $name, $email, $phone, $password, $role);
-    
-    if($stmt->execute()){
-        header("Location: clients.php?msg=added");
+    if ($id > 0) {
+        $sql = "UPDATE users SET name='$name', phone='$phone', email='$email', dob=$dob, preferred_stylist_id=$stylist, preferences='$prefs' WHERE id=$id";
     } else {
-        header("Location: clients.php?msg=error");
+        $pass = password_hash("salon123", PASSWORD_DEFAULT);
+        $sql = "INSERT INTO users (name, email, phone, password, role, dob, preferred_stylist_id, preferences) VALUES ('$name', '$email', '$phone', '$pass', 'client', $dob, $stylist, '$prefs')";
     }
+    
+    $conn->query($sql);
+    header("Location: clients.php?msg=success");
     exit();
 }
 
-// 2. UPDATE CLIENT
-if (isset($_POST['update_client'])) {
-    $id = (int)$_POST['client_id'];
-    $name = $conn->real_escape_string($_POST['name']);
-    $email = $conn->real_escape_string($_POST['email']);
-    $phone = $conn->real_escape_string($_POST['phone']);
-    $new_password = $_POST['password'];
-
-    if (!empty($new_password)) {
-        $hashed_pass = password_hash($new_password, PASSWORD_DEFAULT);
-        $stmt = $conn->prepare("UPDATE users SET name=?, email=?, phone=?, password=? WHERE id=? AND role='client'");
-        $stmt->bind_param("ssssi", $name, $email, $phone, $hashed_pass, $id);
-    } else {
-        $stmt = $conn->prepare("UPDATE users SET name=?, email=?, phone=? WHERE id=? AND role='client'");
-        $stmt->bind_param("sssi", $name, $email, $phone, $id);
-    }
-    
-    $stmt->execute();
-    header("Location: clients.php?msg=updated");
-    exit();
-}
-
-// 3. DELETE CLIENT
-if (isset($_GET['delete_id'])) {
-    $id = (int)$_GET['delete_id'];
-    $conn->query("DELETE FROM users WHERE id = $id AND role = 'client'");
+if (isset($_GET['del_id'])) {
+    $conn->query("DELETE FROM users WHERE id=".(int)$_GET['del_id']." AND role='client'");
     header("Location: clients.php?msg=deleted");
-    exit();
 }
