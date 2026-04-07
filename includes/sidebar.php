@@ -40,6 +40,14 @@
         <div class="nav-section-label">Management</div>
     <?php endif; ?>
 
+    <!-- --- Services: Admin only --- -->
+    <?php if (getUserRole() === 'admin'): ?>
+        <a href="services.php" class="nav-link-custom">
+            <i class="bi bi-scissors"></i>
+            <span>Service Menu</span>
+        </a>
+    <?php endif; ?>
+
     <!-- --- Staff: Admin only --- -->
     <?php if (getUserRole() === 'admin'): ?>
         <a href="staff.php" class="nav-link-custom">
