@@ -9,6 +9,11 @@ $totalItems = $conn->query("SELECT COUNT(*) as total FROM inventory")->fetch_ass
 $lowStockCount = $conn->query("SELECT COUNT(*) as total FROM inventory WHERE quantity <= reorder_level")->fetch_assoc()['total'] ?? 0;
 $totalValue = $conn->query("SELECT SUM(quantity * cost_per_unit) as val FROM inventory")->fetch_assoc()['val'] ?? 0;
 
+// NEW: Fetch Suppliers so the "Add New" dropdown has data
+$suppliersList = $conn->query("SELECT id, supplier_name FROM suppliers ORDER BY supplier_name ASC");
+$suppliers = [];
+while($s = $suppliersList->fetch_assoc()) { $suppliers[] = $s; }
+
 // 2. Fetch Inventory
 $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOIN suppliers s ON i.supplier_id = s.id ORDER BY i.name ASC");
 ?>
@@ -22,7 +27,6 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Responsive adjustments for the Stat Cards */
         @media (max-width: 768px) {
             .panel-title { font-size: 1.5rem; }
             .fs-2 { font-size: 1.5rem !important; }
@@ -30,18 +34,28 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
             .d-flex-mobile { flex-direction: column; align-items: stretch !important; }
         }
         
-        /* Ensure table doesn't break layout */
         .table-responsive {
             border-radius: 8px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        /* Modal responsiveness */
         .modal-box {
             width: 95%;
             max-width: 500px;
             margin: 20px;
+        }
+
+        /* Essential for modal visibility */
+        .modal-overlay { 
+            display:none; 
+            position:fixed; 
+            top:0; left:0; 
+            width:100%; height:100%; 
+            background:rgba(0,0,0,0.5); 
+            z-index:2000; 
+            justify-content:center; 
+            align-items:center; 
         }
     </style>
 </head>
@@ -144,10 +158,60 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
         </div>
     </div>
 
-    <div class="modal-overlay" id="editModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1050; justify-content:center; align-items:center;">
+    <div class="modal-overlay" id="addModal">
         <div class="modal-box bg-white rounded shadow">
             <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                <h5 class="m-0">Edit Inventory Item</h5>
+                <h5 class="m-0 fw-bold">Add New Item</h5>
+                <button class="btn-close" onclick="closeModal()"></button>
+            </div>
+            <form action="inventory_proc.php" method="POST">
+                <div class="p-3">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">ITEM NAME</label>
+                        <input type="text" name="ins_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">CATEGORY</label>
+                        <input type="text" name="ins_category" class="form-control">
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">INITIAL QTY</label>
+                            <input type="number" name="ins_qty" class="form-control" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">COST (Rs)</label>
+                            <input type="number" step="0.01" name="ins_cost" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">REORDER LVL</label>
+                            <input type="number" name="ins_reorder" class="form-control" value="10">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-bold small">SUPPLIER</label>
+                            <select name="ins_supplier" class="form-select">
+                                <option value="">None</option>
+                                <?php foreach($suppliers as $s): ?>
+                                    <option value="<?php echo $s['id']; ?>"><?php echo htmlspecialchars($s['supplier_name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 bg-light border-top text-end rounded-bottom">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>
+                    <button type="submit" name="btn_save" class="btn-gold btn-sm px-4">Save Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box bg-white rounded shadow">
+            <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
+                <h5 class="m-0 fw-bold">Edit Inventory Item</h5>
                 <button class="btn-close" onclick="closeModal()"></button>
             </div>
             <form action="inventory_proc.php" method="POST">
@@ -162,7 +226,7 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
                 </div>
                 <div class="panel-footer p-3 text-end border-top bg-light rounded-bottom">
                     <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="btn_update" class="btn-gold btn-sm px-4">Save</button>
+                    <button type="submit" name="btn_update" class="btn-gold btn-sm px-4">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -180,9 +244,8 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
         
-        // Close modal if clicking outside box
         window.onclick = function(event) {
-            if (event.target.className === 'modal-overlay') closeModal();
+            if (event.target.classList.contains('modal-overlay')) closeModal();
         }
     </script>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
