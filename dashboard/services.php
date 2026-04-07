@@ -1,196 +1,176 @@
-<?php 
-  $pageTitle = "Service Management";
-  require_once '../includes/auth.php';
-  require_once '../includes/db.php'; 
-  checkAccess(['admin']); 
+<?php
+require_once '../includes/auth.php';
+require_once '../includes/db.php';
 
-  // Fetch services from the database defined in your SQL file
-  $query = "SELECT * FROM services ORDER BY name ASC";
-  $result = $conn->query($query);
+checkAccess(['admin', 'receptionist']);
+
+// 1. Fetch Stats (Reverted to the design you liked)
+$totalServices = $conn->query("SELECT COUNT(*) as total FROM services")->fetch_assoc()['total'] ?? 0;
+$activeServices = $conn->query("SELECT COUNT(*) as total FROM services WHERE status = 'active'")->fetch_assoc()['total'] ?? 0;
+$inactiveServices = $conn->query("SELECT COUNT(*) as total FROM services WHERE status = 'inactive'")->fetch_assoc()['total'] ?? 0;
+
+// 2. Fetch Services
+$result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elegance Salon | Services</title>
+    <title>Service Management | Elegance Salon</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
 </head>
 <body>
-
     <?php include('../includes/sidebar.php'); ?>
 
     <div class="main-area">
         <?php include('../includes/topbar.php'); ?>
 
         <div class="content-area">
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-                <div>
-                    <h2 class="panel-title" style="font-size: 24px;">Saloon Services</h2>
-                    <p class="panel-subtitle">Manage your service menu and pricing</p>
+            <div class="row align-items-center mb-4">
+                <div class="col-12 d-md-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="panel-title fs-3">Service Menu</h2>
+                        <p class="panel-subtitle">Manage salon offerings and categories</p>
+                    </div>
+                    <button class="btn-gold mt-3 mt-md-0" onclick="openModal('addModal')">
+                        <i class="bi bi-plus-lg"></i> Add New Service
+                    </button>
                 </div>
-                <button class="btn-gold" onclick="openModal('addServiceModal')">
-                    <i class="bi bi-plus-lg"></i> Add New Service
-                </button>
             </div>
 
-            <?php if(isset($_GET['msg'])): ?>
-                <div class="alert alert-success d-flex align-items-center mb-4" style="font-size:13px; border-radius:10px;">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    Service successfully <?php echo $_GET['msg']; ?>!
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid var(--gold);">
+                        <div class="fs-2 text-gold"><i class="bi bi-scissors"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $totalServices; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Total Services</small>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #198754;">
+                        <div class="fs-2 text-success"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $activeServices; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Active Now</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #dc3545;">
+                        <div class="fs-2 text-danger"><i class="bi bi-pause-circle-fill"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $inactiveServices; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.75rem;">Inactive</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="panel">
-                <div class="panel-body p-0">
-                    <div class="table-responsive">
-                        <table class="data-table" style="min-width: 700px;">
-                            <thead>
-                                <tr>
-                                    <th>Service Name</th>
-                                    <th>Duration</th>
-                                    <th>Price</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if($result && $result->num_rows > 0): ?>
-                                    <?php while($service = $result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td>
-                                            <div class="fw-bold"><?php echo htmlspecialchars($service['name']); ?></div>
-                                            <div class="text-muted small"><?php echo htmlspecialchars($service['description']); ?></div>
-                                        </td>
-                                        <td><?php echo $service['duration']; ?> Mins</td>
-                                        <td class="fw-bold text-gold">₨<?php echo number_format($service['price']); ?></td>
-                                        <td>
-                                            <?php if($service['status'] == 'active'): ?>
-                                                <span class="badge-confirmed">Active</span>
-                                            <?php else: ?>
-                                                <span class="badge-cancelled">Inactive</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-end">
-                                            <button class="topbar-icon-btn d-inline-flex border-0 me-2" 
-                                                    onclick='prepareEdit(<?php echo json_encode($service); ?>)'>
-                                                <i class="bi bi-pencil"></i>
-                                            </button>
-                                            <a href="service_proc.php?delete=<?php echo $service['id']; ?>" 
-                                               class="topbar-icon-btn d-inline-flex border-0 text-danger" 
-                                               onclick="return confirm('Delete this service?')">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr><td colspan="5" class="text-center py-5 text-muted">No services found.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($row = $result->fetch_assoc()): ?>
+                            <tr>
+                                <td class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></td>
+                                <td><span class="badge bg-light text-dark border"><?php echo htmlspecialchars($row['category'] ?: 'General'); ?></span></td>
+                                <td class="text-success fw-bold">Rs. <?php echo number_format($row['price']); ?></td>
+                                <td><?php echo $row['duration']; ?> mins</td>
+                                <td><span class="badge <?php echo ($row['status'] == 'active') ? 'bg-success' : 'bg-danger'; ?>"><?php echo strtoupper($row['status']); ?></span></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick='fillEdit(<?php echo json_encode($row); ?>)'>
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <a href="service_proc.php?del_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this service permanently?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="addServiceModal">
+    <div class="modal-overlay" id="addModal">
         <div class="modal-box">
             <div class="panel-header">
                 <div class="panel-title">Add New Service</div>
-                <button class="btn-outline border-0 p-0" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="service_proc.php" method="POST">
                 <div class="panel-body">
-                    <div class="mb-3">
-                        <label class="form-label-sm">Service Name</label>
-                        <input type="text" name="name" class="form-input" required>
+                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="add_name" class="form-input" required></div>
+                    <div class="row">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="add_category" class="form-input" placeholder="e.g. Hair"></div>
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="add_price" class="form-input" required></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label-sm">Description</label>
-                        <textarea name="description" class="form-input" rows="2"></textarea>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label-sm">Price (Rs)</label>
-                            <input type="number" name="price" class="form-input" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label-sm">Duration (Mins)</label>
-                            <input type="number" name="duration" class="form-input" required>
-                        </div>
-                    </div>
+                    <div class="mb-3"><label class="form-label fw-bold small">Duration (Mins)</label><input type="number" name="add_duration" class="form-input" value="30"></div>
                 </div>
-                <div class="panel-header border-top justify-content-end gap-2">
-                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="add_service" class="btn-gold">Save Service</button>
-                </div>
+                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_add" class="btn-gold">Save Service</button></div>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="editServiceModal">
+    <div class="modal-overlay" id="editModal">
         <div class="modal-box">
             <div class="panel-header">
                 <div class="panel-title">Edit Service</div>
-                <button class="btn-outline border-0 p-0" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="service_proc.php" method="POST">
-                <input type="hidden" name="service_id" id="edit_id">
+                <input type="hidden" name="upd_id" id="field_id">
                 <div class="panel-body">
-                    <div class="mb-3">
-                        <label class="form-label-sm">Service Name</label>
-                        <input type="text" name="name" id="edit_name" class="form-input" required>
+                    <div class="mb-3"><label class="form-label fw-bold small">Service Name</label><input type="text" name="upd_name" id="field_name" class="form-input" required></div>
+                    <div class="row">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Category</label><input type="text" name="upd_category" id="field_category" class="form-input"></div>
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Price</label><input type="number" name="upd_price" id="field_price" class="form-input" required></div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label-sm">Description</label>
-                        <textarea name="description" id="edit_description" class="form-input" rows="2"></textarea>
-                    </div>
-                    <div class="row g-2 mb-3">
-                        <div class="col-6">
-                            <label class="form-label-sm">Price (Rs)</label>
-                            <input type="number" name="price" id="edit_price" class="form-input" required>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label-sm">Duration (Mins)</label>
-                            <input type="number" name="duration" id="edit_duration" class="form-input" required>
+                    <div class="row">
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Duration</label><input type="number" name="upd_duration" id="field_duration" class="form-input"></div>
+                        <div class="col-6 mb-3"><label class="form-label fw-bold small">Status</label>
+                            <select name="upd_status" id="field_status" class="form-input">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
                         </div>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label-sm">Availability Status</label>
-                        <select name="status" id="edit_status" class="form-input">
-                            <option value="active">Active (Visible to Clients)</option>
-                            <option value="inactive">Inactive (Hidden)</option>
-                        </select>
-                    </div>
                 </div>
-                <div class="panel-header border-top justify-content-end gap-2">
-                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="update_service" class="btn-gold">Update Service</button>
-                </div>
+                <div class="panel-footer p-3 text-end border-top"><button type="submit" name="btn_update" class="btn-gold">Update Changes</button></div>
             </form>
         </div>
     </div>
 
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/dashboard.js"></script>
     <script>
-        // This function handles the data injection into the Edit Modal
-        function prepareEdit(data) {
-            document.getElementById('edit_id').value = data.id;
-            document.getElementById('edit_name').value = data.name;
-            document.getElementById('edit_description').value = data.description;
-            document.getElementById('edit_price').value = data.price;
-            document.getElementById('edit_duration').value = data.duration;
-            document.getElementById('edit_status').value = data.status;
-            
-            // Calls your existing openModal function from dashboard.js
-            openModal('editServiceModal');
+        function fillEdit(data) {
+            document.getElementById('field_id').value = data.id;
+            document.getElementById('field_name').value = data.name;
+            document.getElementById('field_category').value = data.category || '';
+            document.getElementById('field_price').value = data.price;
+            document.getElementById('field_duration').value = data.duration;
+            document.getElementById('field_status').value = data.status;
+            openModal('editModal');
         }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
     </script>
 </body>
 </html>
