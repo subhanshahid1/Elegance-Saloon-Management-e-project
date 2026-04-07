@@ -2,52 +2,23 @@
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 
-// Security: Ensure user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit();
-}
+checkAccess(['admin', 'receptionist']);
 
-$loggedInId = $_SESSION['user_id'];
-$loggedInRole = getUserRole(); // Helper function from auth.php
+$countResult = $conn->query("SELECT COUNT(*) as total FROM users WHERE role IN ('admin', 'receptionist', 'stylist')");
+$totalStaff = $countResult->fetch_assoc()['total'];
 
-// --- DATA FILTERING ---
-if ($loggedInRole === 'admin') {
-    // Admin sees all staff members
-    $query = "SELECT * FROM users WHERE role IN ('stylist', 'receptionist') ORDER BY name ASC";
-} else {
-    // Staff ONLY see their own record
-    $query = "SELECT * FROM users WHERE id = $loggedInId";
-}
-
+$query = "SELECT * FROM users WHERE role IN ('admin', 'receptionist', 'stylist') ORDER BY role, name ASC";
 $result = $conn->query($query);
-
-function getInitials($name) {
-    $words = explode(" ", $name);
-    $initials = "";
-    foreach ($words as $w) { $initials .= (!empty($w)) ? $w[0] : ''; }
-    return strtoupper(substr($initials, 0, 2));
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo ($loggedInRole === 'admin') ? 'Staff Team' : 'My Profile'; ?> | Elegance</title>
+    <title>Staff Management | Elegance Salon</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
-    <style>
-        .staff-card { text-align: center; padding: 30px 20px; position: relative; border: 1px solid rgba(0,0,0,0.05); transition: 0.3s; }
-        .staff-card:hover { border-color: var(--gold); }
-        .staff-avatar-lg {
-            width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 15px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 600; border: 3px solid #f8f9fa;
-        }
-        .status-badge { position: absolute; top: 15px; right: 15px; font-size: 10px; padding: 4px 8px; border-radius: 20px; font-weight: bold; }
-    </style>
 </head>
 <body>
     <?php include('../includes/sidebar.php'); ?>
@@ -56,103 +27,218 @@ function getInitials($name) {
         <?php include('../includes/topbar.php'); ?>
 
         <div class="content-area">
-            <div class="row g-3 align-items-center mb-4">
-                <div class="col-md-6">
-                    <h2 class="panel-title fs-3"><?php echo ($loggedInRole === 'admin') ? 'Staff Management' : 'My Professional Profile'; ?></h2>
-                    <p class="panel-subtitle">Manage salon availability and performance</p>
-                </div>
-                
-                <?php if ($loggedInRole === 'admin'): ?>
-                <div class="col-md-6 text-md-end">
-                    <button class="btn-gold" onclick="openModal('addStaffModal')">
-                        <i class="bi bi-person-plus"></i> Add New Member
-                    </button>
-                </div>
+            <?php if(isset($_GET['msg'])): ?>
+                <?php if($_GET['msg'] == 'email_exists'): ?>
+                    <div class="alert alert-danger d-flex align-items-center"><i class="bi bi-exclamation-triangle-fill me-2"></i> Error: This email is already registered to another user.</div>
+                <?php elseif($_GET['msg'] == 'added'): ?>
+                    <div class="alert alert-success">Staff member added successfully!</div>
+                <?php elseif($_GET['msg'] == 'updated'): ?>
+                    <div class="alert alert-info">Staff details updated successfully!</div>
+                <?php elseif($_GET['msg'] == 'deleted'): ?>
+                    <div class="alert alert-warning">Staff record removed.</div>
                 <?php endif; ?>
-            </div>
+            <?php endif; ?>
 
-            <div class="row g-4">
-                <?php while($staff = $result->fetch_assoc()): 
-                    $isOnDuty = ($staff['status'] === 'active');
-                ?>
-                <div class="col-12 col-md-6 col-xl-4">
-                    <div class="panel staff-card">
-                        <span class="status-badge <?php echo $isOnDuty ? 'badge-confirmed' : 'badge-cancelled'; ?>">
-                            <?php echo $isOnDuty ? '● ON DUTY' : '○ OFF DUTY'; ?>
-                        </span>
-
-                        <div class="staff-avatar-lg" style="background: #fdf2f2; color: var(--gold-dark);">
-                            <?php echo getInitials($staff['name']); ?>
-                        </div>
-
-                        <h3 class="staff-name fs-5 mb-1"><?php echo htmlspecialchars($staff['name']); ?></h3>
-                        <span class="text-gold small text-uppercase fw-bold"><?php echo $staff['role']; ?></span>
-                        
-                        <div class="staff-stats d-flex justify-content-center gap-4 mt-3 border-top pt-3">
-                            <div class="text-center"><span class="d-block fw-bold">0</span><small class="text-muted">Bookings</small></div>
-                            <div class="text-center"><span class="d-block fw-bold">5.0</span><small class="text-muted">Rating</small></div>
-                        </div>
-
-                        <div class="mt-4">
-                            <a href="staff_proc.php?toggle_id=<?php echo $staff['id']; ?>&status=<?php echo $staff['status']; ?>" 
-                               class="btn <?php echo $isOnDuty ? 'btn-outline-secondary' : 'btn-gold'; ?> w-100 py-2">
-                               Mark <?php echo $isOnDuty ? 'Off Duty' : 'On Duty'; ?>
-                            </a>
-                            
-                            <?php if ($loggedInRole === 'admin' && $staff['id'] != $loggedInId): ?>
-                                <a href="staff_proc.php?delete_id=<?php echo $staff['id']; ?>" 
-                                   class="text-danger small d-block mt-3" onclick="return confirm('Remove this staff member permanently?')">
-                                   <i class="bi bi-trash"></i> Remove Staff
-                                </a>
-                            <?php endif; ?>
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid var(--gold);">
+                        <div class="fs-1 text-gold"><i class="bi bi-person-workspace"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $totalStaff; ?></h4>
+                            <small class="text-muted text-uppercase">Team Members</small>
                         </div>
                     </div>
                 </div>
-                <?php endwhile; ?>
+            </div>
+
+            <div class="row align-items-center mb-4">
+                <div class="col-12 d-md-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="panel-title fs-3">Staff Directory</h2>
+                        <p class="panel-subtitle">Manage shifts, roles, and commission rates</p>
+                    </div>
+                    <button class="btn-gold mt-3 mt-md-0" onclick="openModal('addStaffModal')">
+                        <i class="bi bi-person-plus-fill"></i> Add Staff Member
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="table-responsive">
+                    <table class="table custom-table">
+                        <thead>
+                            <tr>
+                                <th>Name & Role</th>
+                                <th>Contact info</th>
+                                <th>Commission (%)</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php while($row = $result->fetch_assoc()): 
+                                $staffData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                            ?>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></div>
+                                    <span class="badge bg-light text-dark border small text-uppercase"><?php echo $row['role']; ?></span>
+                                </td>
+                                <td>
+                                    <small class="d-block"><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($row['email']); ?></small>
+                                    <small class="d-block"><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($row['phone'] ?? 'N/A'); ?></small>
+                                </td>
+                                <td><?php echo ($row['role'] == 'stylist') ? $row['commission_rate'].'%' : 'N/A'; ?></td>
+                                <td>
+                                    <span class="badge <?php echo ($row['status'] == 'active') ? 'bg-success' : 'bg-danger'; ?>">
+                                        <?php echo strtoupper($row['status']); ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-sm btn-outline-secondary edit-staff-btn" data-item='<?php echo $staffData; ?>'><i class="bi bi-pencil"></i></button>
+                                        <a href="staff_proc.php?delete_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove staff member?')"><i class="bi bi-trash"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endwhile; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
 
-    <?php if ($loggedInRole === 'admin'): ?>
     <div class="modal-overlay" id="addStaffModal">
-        <div class="modal-box">
+        <div class="modal-box" style="max-width: 600px;">
             <div class="panel-header">
-                <div class="panel-title">Create Staff Account</div>
+                <div class="panel-title">Register New Staff</div>
                 <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="staff_proc.php" method="POST">
                 <div class="panel-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Full Name</label>
-                        <input type="text" name="name" class="form-input" placeholder="e.g. Sara Khan" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Email Address</label>
-                        <input type="email" name="email" class="form-input" required>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6 mb-3">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" name="name" class="form-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
                             <label class="form-label small fw-bold">Role</label>
-                            <select name="role" class="form-input">
+                            <select name="role" class="form-input" required>
                                 <option value="stylist">Stylist</option>
                                 <option value="receptionist">Receptionist</option>
+                                <option value="admin">Admin</option>
                             </select>
                         </div>
-                        <div class="col-6 mb-3">
-                            <label class="form-label small fw-bold">Temp Password</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Email Address</label>
+                            <input type="email" name="email" class="form-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Phone Number</label>
+                            <input type="text" name="phone" class="form-input">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Commission Rate (%)</label>
+                            <input type="number" step="0.01" name="commission_rate" class="form-input" value="0.00">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Password</label>
                             <input type="password" name="password" class="form-input" required>
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Work Schedule</label>
+                        <textarea name="work_schedule" class="form-input" rows="2" placeholder="e.g. Mon-Fri, 9AM-6PM"></textarea>
                     </div>
                 </div>
                 <div class="panel-header border-top justify-content-end gap-2">
                     <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="add_staff" class="btn-gold">Create Member</button>
+                    <button type="submit" name="add_staff" class="btn-gold">Add Staff</button>
                 </div>
             </form>
         </div>
     </div>
-    <?php endif; ?>
+
+    <div class="modal-overlay" id="editStaffModal">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="panel-header">
+                <div class="panel-title">Edit Staff Member</div>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="staff_proc.php" method="POST">
+                <input type="hidden" name="staff_id" id="edit_staff_id">
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Full Name</label>
+                            <input type="text" name="name" id="edit_staff_name" class="form-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Status</label>
+                            <select name="status" id="edit_staff_status" class="form-input">
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Email</label>
+                            <input type="email" name="email" id="edit_staff_email" class="form-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Phone</label>
+                            <input type="text" name="phone" id="edit_staff_phone" class="form-input">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">Commission Rate (%)</label>
+                            <input type="number" step="0.01" name="commission_rate" id="edit_staff_commission" class="form-input">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small fw-bold">New Password (Optional)</label>
+                            <input type="password" name="password" class="form-input" placeholder="Leave blank to keep current">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Work Schedule</label>
+                        <textarea name="work_schedule" id="edit_staff_schedule" class="form-input" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="panel-header border-top justify-content-end gap-2">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" name="update_staff" class="btn-gold">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="../assets/js/dashboard.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const editButtons = document.querySelectorAll('.edit-staff-btn');
+        editButtons.forEach(btn => {
+            btn.onclick = function() {
+                const staff = JSON.parse(this.getAttribute('data-item'));
+                document.getElementById('edit_staff_id').value = staff.id;
+                document.getElementById('edit_staff_name').value = staff.name;
+                document.getElementById('edit_staff_email').value = staff.email;
+                document.getElementById('edit_staff_phone').value = staff.phone || '';
+                document.getElementById('edit_staff_status').value = staff.status;
+                document.getElementById('edit_staff_commission').value = staff.commission_rate;
+                document.getElementById('edit_staff_schedule').value = staff.work_schedule || '';
+                openModal('editStaffModal');
+            };
+        });
+    });
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+    </script>
 </body>
 </html>
