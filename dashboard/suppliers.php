@@ -17,7 +17,6 @@ $result = $conn->query("SELECT * FROM suppliers ORDER BY supplier_name ASC");
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        /* Responsive Table & Modal adjustments */
         @media (max-width: 768px) {
             .panel-title { font-size: 1.5rem; }
             .btn-responsive { width: 100%; }
@@ -35,12 +34,22 @@ $result = $conn->query("SELECT * FROM suppliers ORDER BY supplier_name ASC");
             margin: 20px;
         }
 
-        /* Prevent address from breaking table layout on small desktops */
         .address-col {
             max-width: 150px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .modal-overlay {
+            display:none; 
+            position:fixed; 
+            top:0; left:0; 
+            width:100%; height:100%; 
+            background:rgba(0,0,0,0.5); 
+            z-index:1050; 
+            justify-content:center; 
+            align-items:center;
         }
     </style>
 </head>
@@ -115,45 +124,76 @@ $result = $conn->query("SELECT * FROM suppliers ORDER BY supplier_name ASC");
         </div>
     </div>
 
-    <div class="modal-overlay" id="addSupplierModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1050; justify-content:center; align-items:center;">
+    <div class="modal-overlay" id="addSupplierModal">
         <div class="modal-box bg-white rounded shadow">
             <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                <div class="panel-title m-0">Add New Supplier</div>
+                <h5 class="m-0 fw-bold">Add New Supplier</h5>
                 <button class="btn-close" onclick="closeModal()"></button>
             </div>
             <form action="supplier_proc.php" method="POST">
                 <div class="panel-body p-3">
-                    <div class="mb-3"><label class="fw-bold small text-uppercase">Supplier Name</label><input type="text" name="s_name" class="form-control" required></div>
-                    <div class="row g-2">
-                        <div class="col-6 mb-3"><label class="fw-bold small text-uppercase">Contact Person</label><input type="text" name="s_contact" class="form-control"></div>
-                        <div class="col-6 mb-3"><label class="fw-bold small text-uppercase">Phone</label><input type="text" name="s_phone" class="form-control"></div>
+                    <div class="mb-3">
+                        <label class="fw-bold small text-uppercase">Supplier Name</label>
+                        <input type="text" name="s_name" class="form-control" required>
                     </div>
-                    <div class="mb-3"><label class="fw-bold small text-uppercase">Email Address</label><input type="email" name="s_email" class="form-control"></div>
-                    <div class="mb-0"><label class="fw-bold small text-uppercase">Address</label><textarea name="s_address" class="form-control" rows="2"></textarea></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3">
+                            <label class="fw-bold small text-uppercase">Contact Person</label>
+                            <input type="text" name="s_contact" class="form-control">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="fw-bold small text-uppercase">Phone</label>
+                            <input type="text" name="s_phone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold small text-uppercase">Email Address</label>
+                        <input type="email" name="s_email" class="form-control">
+                    </div>
+                    <div class="mb-0">
+                        <label class="fw-bold small text-uppercase">Address</label>
+                        <textarea name="s_address" class="form-control" rows="2"></textarea>
+                    </div>
                 </div>
                 <div class="panel-footer p-3 text-end border-top bg-light rounded-bottom">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeModal()">Cancel</button>
                     <button type="submit" name="add_supplier" class="btn-gold btn-sm px-4">Save Supplier</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="editSupplierModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1050; justify-content:center; align-items:center;">
+    <div class="modal-overlay" id="editSupplierModal">
         <div class="modal-box bg-white rounded shadow">
             <div class="panel-header d-flex justify-content-between align-items-center p-3 border-bottom">
-                <div class="panel-title m-0">Edit Supplier</div>
+                <h5 class="m-0 fw-bold">Edit Supplier</h5>
                 <button class="btn-close" onclick="closeModal()"></button>
             </div>
             <form action="supplier_proc.php" method="POST">
                 <input type="hidden" name="s_id" id="e_id">
                 <div class="panel-body p-3">
-                    <div class="mb-3"><label class="fw-bold small text-uppercase">Supplier Name</label><input type="text" name="s_name" id="e_name" class="form-control" required></div>
-                    <div class="row g-2">
-                        <div class="col-6 mb-3"><label class="fw-bold small text-uppercase">Contact Person</label><input type="text" name="s_contact" id="e_contact" class="form-control"></div>
-                        <div class="col-6 mb-3"><label class="fw-bold small text-uppercase">Phone</label><input type="text" name="s_phone" id="e_phone" class="form-control"></div>
+                    <div class="mb-3">
+                        <label class="fw-bold small text-uppercase">Supplier Name</label>
+                        <input type="text" name="s_name" id="e_name" class="form-control" required>
                     </div>
-                    <div class="mb-3"><label class="fw-bold small text-uppercase">Email Address</label><input type="email" name="s_email" id="e_email" class="form-control"></div>
-                    <div class="mb-0"><label class="fw-bold small text-uppercase">Address</label><textarea name="s_address" id="e_address" class="form-control" rows="2"></textarea></div>
+                    <div class="row g-2">
+                        <div class="col-6 mb-3">
+                            <label class="fw-bold small text-uppercase">Contact Person</label>
+                            <input type="text" name="s_contact" id="e_contact" class="form-control">
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="fw-bold small text-uppercase">Phone</label>
+                            <input type="text" name="s_phone" id="e_phone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="fw-bold small text-uppercase">Email Address</label>
+                        <input type="email" name="s_email" id="e_email" class="form-control">
+                    </div>
+                    <div class="mb-0">
+                        <label class="fw-bold small text-uppercase">Address</label>
+                        <textarea name="s_address" id="e_address" class="form-control" rows="2"></textarea>
+                    </div>
                 </div>
                 <div class="panel-footer p-3 text-end border-top bg-light rounded-bottom">
                     <button type="submit" name="update_supplier" class="btn-gold btn-sm px-4">Update Changes</button>
@@ -176,8 +216,9 @@ $result = $conn->query("SELECT * FROM suppliers ORDER BY supplier_name ASC");
         function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
         
         window.onclick = function(event) {
-            if (event.target.className === 'modal-overlay') closeModal();
+            if (event.target.classList.contains('modal-overlay')) closeModal();
         }
     </script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -2,6 +2,8 @@
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 
+checkAccess(['admin', 'receptionist']);
+
 // 1. ADD SUPPLIER
 if (isset($_POST['add_supplier'])) {
     $name    = $conn->real_escape_string($_POST['s_name']);
@@ -10,10 +12,14 @@ if (isset($_POST['add_supplier'])) {
     $email   = $conn->real_escape_string($_POST['s_email']);
     $addr    = $conn->real_escape_string($_POST['s_address']);
 
-    $conn->query("INSERT INTO suppliers (supplier_name, contact_person, email, phone, address) 
-                  VALUES ('$name', '$contact', '$email', '$phone', '$addr')");
+    $sql = "INSERT INTO suppliers (supplier_name, contact_person, email, phone, address) 
+            VALUES ('$name', '$contact', '$email', '$phone', '$addr')";
     
-    header("Location: suppliers.php?msg=added");
+    if($conn->query($sql)) {
+        header("Location: suppliers.php?msg=added");
+    } else {
+        echo "Error: " . $conn->error;
+    }
     exit();
 }
 
@@ -26,12 +32,16 @@ if (isset($_POST['update_supplier'])) {
     $email   = $conn->real_escape_string($_POST['s_email']);
     $addr    = $conn->real_escape_string($_POST['s_address']);
 
-    $conn->query("UPDATE suppliers SET 
-                  supplier_name='$name', contact_person='$contact', 
-                  email='$email', phone='$phone', address='$addr' 
-                  WHERE id=$id");
+    $sql = "UPDATE suppliers SET 
+            supplier_name='$name', contact_person='$contact', 
+            email='$email', phone='$phone', address='$addr' 
+            WHERE id=$id";
     
-    header("Location: suppliers.php?msg=updated");
+    if($conn->query($sql)) {
+        header("Location: suppliers.php?msg=updated");
+    } else {
+        echo "Error: " . $conn->error;
+    }
     exit();
 }
 
@@ -42,3 +52,6 @@ if (isset($_GET['del_id'])) {
     header("Location: suppliers.php?msg=deleted");
     exit();
 }
+
+header("Location: suppliers.php");
+exit();
