@@ -222,5 +222,7 @@ $result = $conn->query("SELECT * FROM services ORDER BY category ASC, name ASC")
             }
         }
     </script>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>
