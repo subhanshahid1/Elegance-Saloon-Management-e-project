@@ -1,6 +1,48 @@
 <?php
 require_once '../includes/auth.php';
+require_once '../includes/db.php'; 
 checkAccess(['admin']);
+
+// 1. Get Summary Stats
+$stats_query = "SELECT 
+    COUNT(*) as total_reviews, 
+    AVG(rating) as avg_rating,
+    SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as star5,
+    SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as star4,
+    SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as star3,
+    SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as star2,
+    SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as star1
+FROM feedbacks";
+
+$stats_res = $conn->query($stats_query);
+$stats = $stats_res->fetch_assoc();
+
+$total = $stats['total_reviews'] ?: 1; 
+$average = round($stats['avg_rating'], 1) ?: 0;
+
+// 2. Filter Logic
+$filter = $_GET['filter'] ?? 'newest';
+$order_by = ($filter === 'critical') ? "rating ASC, created_at DESC" : "created_at DESC";
+
+// 3. Fetch List
+$feedbacks = $conn->query("SELECT * FROM feedbacks WHERE status != 'archived' ORDER BY $order_by LIMIT 50");
+
+// Helpers
+function get_percent($val, $total) { return ($val / $total) * 100; }
+
+function time_elapsed_string($datetime) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+    $w = floor($diff->d / 7);
+    $d = $diff->d - ($w * 7);
+    $items = ['y' => 'yr', 'm' => 'mo', 'w' => $w, 'd' => $d, 'h' => $diff->h, 'i' => 'min'];
+    $labels = ['y' => 'year', 'm' => 'month', 'w' => 'week', 'd' => 'day', 'h' => 'hour', 'i' => 'minute'];
+    foreach ($items as $k => $v) {
+        if ($v > 0) return $v . ' ' . $labels[$k] . ($v > 1 ? 's' : '') . ' ago';
+    }
+    return 'Just now';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,55 +52,50 @@ checkAccess(['admin']);
     <title>Feedback | Elegance Salon</title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
-
     <style>
-        /* ===== FEEDBACK SPECIFIC STYLES ===== */
-        .feedback-item {
-            padding: 20px;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: background 0.2s;
+        :root { --gold: #c9a84c; --charcoal: #1a1a1a; }
+        
+        .feedback-item { padding: 20px; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .star-rating { color: var(--gold); font-size: 12px; }
+        
+        /* Fixed Tabs Section */
+        .tab-pills-container { 
+            background: #f8f9fa; 
+            padding: 5px; 
+            border-radius: 30px; 
+            display: inline-flex;
+            border: 1px solid #eee;
         }
-        .feedback-item:last-child { border-bottom: none; }
-        .feedback-item:hover { background: var(--cream); }
+        .tab-pill { 
+            padding: 6px 20px; 
+            font-size: 13px; 
+            border-radius: 20px; 
+            color: #666 !important; 
+            text-decoration: none !important;
+            transition: 0.3s;
+        }
+        .tab-pill.active { 
+            background: var(--gold) !important; 
+            color: white !important; 
+        }
 
-        .star-rating {
-            color: var(--gold);
-            font-size: 13px;
-            margin-bottom: 5px;
-        }
-        .reviewer-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        .review-text {
-            font-size: 14px;
-            color: #555;
-            font-style: italic;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            display: block;
-        }
-        .sentiment-badge {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
+        .sentiment-badge { font-size: 9px; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; font-weight: 700; }
         .sentiment-positive { background: #E8F5E9; color: #2E7D32; }
         .sentiment-neutral { background: #FFF3E0; color: #EF6C00; }
+        .sentiment-critical { background: #FFEBEE; color: #C62828; }
+        
+        .inv-bar { height: 6px; background: #eee; border-radius: 10px; margin: 4px 0; }
+        .inv-fill { height: 100%; background: var(--gold); border-radius: 10px; }
+        
+        @media (max-width: 768px) {
+            .rating-huge { font-size: 36px; }
+        }
 
-        /* --- Rating Summary Card --- */
-        .rating-huge {
-            font-family: var(--font-display);
-            font-size: 48px;
-            font-weight: 600;
-            line-height: 1;
-            color: var(--charcoal);
+        @media print {
+            .sidebar, .topbar, .tab-pills-container, .btn-outline, .btn-gold { display: none !important; }
+            .main-area { margin: 0; padding: 0; width: 100%; }
+            .panel { box-shadow: none !important; border: 1px solid #ddd !important; }
         }
     </style>
 </head>
@@ -69,123 +106,87 @@ checkAccess(['admin']);
     <div class="main-area">
         <?php include('../includes/topbar.php'); ?>
 
-        <div class="content-area">
+        <div class="content-area container-fluid px-3 px-md-4 py-4">
             
-            <div class="row g-3 align-items-center section-gap">
+            <div class="row g-3 align-items-center mb-4">
                 <div class="col-12 col-md-6">
-                    <h2 class="panel-title fs-3">Customer Feedback</h2>
-                    <p class="panel-subtitle">Monitor reviews and service satisfaction</p>
+                    <h2 class="panel-title fs-3 mb-1">Customer Feedback</h2>
+                    <p class="panel-subtitle">Salon Satisfaction Overview</p>
                 </div>
                 <div class="col-12 col-md-6 d-flex justify-content-md-end gap-2">
-                    <button class="btn-outline">
-                        <i class="bi bi-share"></i> Public Page
-                    </button>
-                    <button class="btn-gold">
-                        <i class="bi bi-envelope"></i> Request Feedback
-                    </button>
+                    <a href="../feedback.php" class="btn-outline btn-sm text-decoration-none"><i class="bi bi-eye"></i> Form</a>
+                    <button onclick="window.print()" class="btn-gold btn-sm"><i class="bi bi-printer"></i> Print</button>
                 </div>
             </div>
 
             <div class="row g-4">
                 <div class="col-12 col-lg-4">
-                    <div class="panel p-4 text-center mb-4">
-                        <div class="panel-subtitle">Average Rating</div>
-                        <div class="rating-huge my-2">4.8</div>
-                        <div class="star-rating fs-5 mb-3">
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-half"></i>
+                    <div class="panel p-4 text-center mb-4 bg-white shadow-sm">
+                        <div class="small text-muted text-uppercase fw-bold mb-2">Avg Rating</div>
+                        <div class="display-5 fw-bold text-dark"><?php echo $average; ?></div>
+                        <div class="star-rating fs-5 mb-2">
+                            <?php for($i=1;$i<=5;$i++) echo ($i<=$average)?'<i class="bi bi-star-fill"></i>':'<i class="bi bi-star"></i>'; ?>
                         </div>
-                        <div class="small text-muted">Based on 1,240 reviews</div>
+                        <div class="small text-muted">From <?php echo number_format($total); ?> reviews</div>
                     </div>
 
-                    <div class="panel p-4">
-                        <div class="panel-title fs-6 mb-3">Rating Breakdown</div>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="small" style="width: 20px;">5</span>
-                            <div class="inv-bar flex-grow-1"><div class="inv-fill ok" style="width: 85%;"></div></div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="small" style="width: 20px;">4</span>
-                            <div class="inv-bar flex-grow-1"><div class="inv-fill ok" style="width: 10%;"></div></div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="small" style="width: 20px;">3</span>
-                            <div class="inv-bar flex-grow-1"><div class="inv-fill low" style="width: 3%;"></div></div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="small" style="width: 20px;">2</span>
-                            <div class="inv-bar flex-grow-1"><div class="inv-fill critical" style="width: 2%;"></div></div>
-                        </div>
+                    <div class="panel p-4 bg-white shadow-sm">
+                        <h6 class="fw-bold mb-3">Rating Breakdown</h6>
+                        <?php for($s=5;$s>=1;$s--): 
+                            $count = $stats['star'.$s] ?? 0;
+                            $pct = get_percent($count, $total); ?>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small mb-1">
+                                    <span><?php echo $s; ?> Stars</span>
+                                    <span class="text-muted"><?php echo round($pct); ?>%</span>
+                                </div>
+                                <div class="inv-bar"><div class="inv-fill" style="width:<?php echo $pct; ?>%"></div></div>
+                            </div>
+                        <?php endfor; ?>
                     </div>
                 </div>
 
                 <div class="col-12 col-lg-8">
-                    <div class="panel">
-                        <div class="panel-header">
-                            <div class="tab-pills">
-                                <button class="tab-pill active" onclick="activateTab(this)">Newest</button>
-                                <button class="tab-pill" onclick="activateTab(this)">Critical</button>
-                                <button class="tab-pill" onclick="activateTab(this)">Featured</button>
+                    <div class="panel bg-white shadow-sm overflow-hidden">
+                        <div class="p-3 border-bottom bg-light d-flex justify-content-center justify-content-md-start">
+                            <div class="tab-pills-container">
+                                <a href="?filter=newest" class="tab-pill <?php echo $filter=='newest'?'active':''; ?>">Newest</a>
+                                <a href="?filter=critical" class="tab-pill <?php echo $filter=='critical'?'active':''; ?>">Critical</a>
                             </div>
                         </div>
                         
-                        <div class="feedback-item">
-                            <div class="d-flex justify-content-between">
-                                <div class="reviewer-info">
-                                    <div class="apt-avatar-sm" style="background:var(--blush); color:var(--rose);">AN</div>
-                                    <div>
-                                        <div class="fw-bold small">Ayesha Noor</div>
-                                        <div class="small text-muted" style="font-size: 10px;">2 hours ago · Service: Balayage</div>
+                        <div class="feedback-list">
+                            <?php if($feedbacks->num_rows > 0): while($row = $feedbacks->fetch_assoc()): 
+                                $sent = ($row['rating'] >= 4) ? 'positive' : (($row['rating'] == 3) ? 'neutral' : 'critical'); ?>
+                                <div class="feedback-item">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <div class="fw-bold text-dark"><?php echo htmlspecialchars($row['name']); ?></div>
+                                            <div class="small text-muted mb-2" style="font-size: 11px;">
+                                                <i class="bi bi-clock"></i> <?php echo time_elapsed_string($row['created_at']); ?> • <?php echo htmlspecialchars($row['email']); ?>
+                                            </div>
+                                            <div class="star-rating mb-2">
+                                                <?php for($i=1;$i<=5;$i++) echo ($i<=$row['rating'])?'<i class="bi bi-star-fill"></i>':'<i class="bi bi-star"></i>'; ?>
+                                            </div>
+                                            <p class="small text-secondary mb-0">"<?php echo htmlspecialchars($row['message']); ?>"</p>
+                                        </div>
+                                        <span class="sentiment-badge sentiment-<?php echo $sent; ?>"><?php echo $sent; ?></span>
                                     </div>
                                 </div>
-                                <span class="sentiment-badge sentiment-positive">Positive</span>
-                            </div>
-                            <div class="star-rating">
-                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-                            </div>
-                            <span class="review-text">"Absolutely loved the color! Sara is a magician with hair. The ambiance was so relaxing and the staff was very professional."</span>
-                            <div class="d-flex gap-2">
-                                <button class="btn-outline py-1 px-3" style="font-size: 11px;">Reply</button>
-                                <button class="btn-outline py-1 px-3" style="font-size: 11px;">Feature</button>
-                            </div>
+                            <?php endwhile; else: ?>
+                                <div class="p-5 text-center text-muted">No reviews found.</div>
+                            <?php endif; ?>
                         </div>
-
-                        <div class="feedback-item">
-                            <div class="d-flex justify-content-between">
-                                <div class="reviewer-info">
-                                    <div class="apt-avatar-sm" style="background:#E8F4FD; color:#2E86C1;">MA</div>
-                                    <div>
-                                        <div class="fw-bold small">Maria Ahmed</div>
-                                        <div class="small text-muted" style="font-size: 10px;">Yesterday · Service: Manicure</div>
-                                    </div>
-                                </div>
-                                <span class="sentiment-badge sentiment-neutral">Neutral</span>
-                            </div>
-                            <div class="star-rating">
-                                <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star"></i>
-                            </div>
-                            <span class="review-text">"The service was good but I had to wait 15 minutes past my appointment time. Hope you guys can improve the scheduling."</span>
-                            <div class="d-flex gap-2">
-                                <button class="btn-outline py-1 px-3" style="font-size: 11px;">Reply</button>
-                                <button class="btn-outline py-1 px-3" style="font-size: 11px;">Archive</button>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/dashboard.js"></script>
     <script>
-        // ===== PAGE NAVIGATION =====
-        document.getElementById('page-title').textContent = "Client Feedback";
+        if(document.getElementById('page-title')) document.getElementById('page-title').textContent = "Feedback";
     </script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>
