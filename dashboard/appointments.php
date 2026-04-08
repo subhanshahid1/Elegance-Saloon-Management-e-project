@@ -2,34 +2,78 @@
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 
-// Only Admin and Receptionist can manage all appointments
-checkAccess(['admin', 'receptionist']);
+// Access Control
+checkAccess(['admin', 'receptionist', 'staff', 'stylist']);
 
-// 1. Fetch Stats for the Top Row
-$totalApts = $conn->query("SELECT COUNT(*) as total FROM appointments")->fetch_assoc()['total'] ?? 0;
-$pendingApts = $conn->query("SELECT COUNT(*) as total FROM appointments WHERE status = 'pending'")->fetch_assoc()['total'] ?? 0;
-$confirmedApts = $conn->query("SELECT COUNT(*) as total FROM appointments WHERE status = 'confirmed'")->fetch_assoc()['total'] ?? 0;
+$current_user_id = getUserId();
+$current_role = getUserRole();
 
-// 2. Fetch Appointments with Joins
-$query = "SELECT a.*, c.name as client_name, s.name as service_name, u.name as stylist_name 
-          FROM appointments a 
-          JOIN users c ON a.client_id = c.id 
-          JOIN services s ON a.service_id = s.id 
-          LEFT JOIN users u ON a.stylist_id = u.id 
-          ORDER BY a.apt_date DESC, a.apt_time DESC";
-$result = $conn->query($query);
+// 1. Fetch Stats (Dynamic based on Role)
+$stats_query = "SELECT 
+    COUNT(*) as total,
+    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+    SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+    FROM appointments";
 
-// 3. Fetch Stylists for the Assignment Dropdown
-$stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND status = 'active'");
+if ($current_role === 'stylist') {
+    $stats_query .= " WHERE stylist_id = $current_user_id";
+}
+$stats = $conn->query($stats_query)->fetch_assoc();
+
+// 2. Fetch Appointments
+$sql = "SELECT a.*, u.name as client_name, u.phone as client_phone, 
+               s.name as service_name, st.name as stylist_name 
+        FROM appointments a 
+        JOIN users u ON a.client_id = u.id 
+        JOIN services s ON a.service_id = s.id 
+        LEFT JOIN users st ON a.stylist_id = st.id";
+
+if ($current_role === 'stylist') {
+    $sql .= " WHERE a.stylist_id = $current_user_id";
+}
+$sql .= " ORDER BY a.apt_date DESC, a.apt_time ASC";
+$result = $conn->query($sql);
+
+// 3. Fetch Stylists for Assignment
+$stylist_list = $conn->query("SELECT id, name FROM users WHERE role = 'stylist'");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Appointment Manager | Elegance Salon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments | <?php echo SITE_NAME; ?></title>
     <link href="../assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
+    <style>
+        /* FIXED: Tab Active Colors */
+        .tab-pill { 
+            border: 1px solid rgba(0,0,0,0.1); 
+            background: #fff; 
+            padding: 8px 22px; 
+            color: #666; 
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            margin-right: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .tab-pill.active { 
+            background: var(--gold) !important; 
+            color: #ffffff !important; 
+            border-color: var(--gold) !important;
+            box-shadow: 0 4px 12px rgba(201, 168, 76, 0.25);
+        }
+        
+        /* Search Box styling */
+        .search-container { position: relative; max-width: 400px; }
+        .search-container i { position: absolute; left: 15px; top: 12px; color: #aaa; z-index: 5; }
+        .search-container input { padding-left: 42px !important; border-radius: 10px; height: 42px; border: 1px solid rgba(0,0,0,0.1); }
+        
+        .badge-completed { background: rgba(25, 135, 84, 0.1); color: #198754; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+        .badge-confirmed { background: rgba(13, 110, 253, 0.1); color: #0d6efd; padding: 4px 12px; border-radius: 20px; font-size: 11px; }
+    </style>
 </head>
 <body>
     <?php include('../includes/sidebar.php'); ?>
@@ -37,79 +81,109 @@ $stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND 
     <div class="main-area">
         <?php include('../includes/topbar.php'); ?>
 
-        <div class="content-area container-fluid">
-            <div class="row align-items-center mb-4">
-                <div class="col-12 d-md-flex justify-content-between align-items-center">
-                    <div>
-                        <h2 class="panel-title fs-3">Appointments</h2>
-                        <p class="panel-subtitle">Manage bookings and stylist assignments</p>
-                    </div>
-                </div>
+        <div class="content-area container-fluid px-4">
+            <div class="mb-4">
+                <h2 class="panel-title fs-3">Appointments</h2>
+                <p class="panel-subtitle">View and manage salon bookings</p>
             </div>
 
             <div class="row mb-4 g-3">
-                <div class="col-12 col-sm-4">
-                    <div class="stat-card gold">
-                        <div class="stat-icon gold"><i class="bi bi-calendar-event"></i></div>
-                        <div class="stat-label">Total Bookings</div>
-                        <div class="stat-value"><?php echo $totalApts; ?></div>
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid var(--gold);">
+                        <div class="fs-2 text-gold"><i class="bi bi-journal-bookmark"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $stats['total'] ?? 0; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold">Total</small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-4">
-                    <div class="stat-card rose">
-                        <div class="stat-icon rose"><i class="bi bi-clock-history"></i></div>
-                        <div class="stat-label">Pending Review</div>
-                        <div class="stat-value"><?php echo $pendingApts; ?></div>
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #ffc107;">
+                        <div class="fs-2 text-warning"><i class="bi bi-hourglass-split"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $stats['pending'] ?? 0; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold">Pending</small>
+                        </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-4">
-                    <div class="stat-card green">
-                        <div class="stat-icon green"><i class="bi bi-check2-circle"></i></div>
-                        <div class="stat-label">Confirmed</div>
-                        <div class="stat-value"><?php echo $confirmedApts; ?></div>
+                <div class="col-md-4">
+                    <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #198754;">
+                        <div class="fs-2 text-success"><i class="bi bi-check-circle"></i></div>
+                        <div>
+                            <h4 class="m-0 fw-bold"><?php echo $stats['completed'] ?? 0; ?></h4>
+                            <small class="text-muted text-uppercase fw-bold">Done</small>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel">
+            <div class="panel p-4">
+                <div class="row align-items-center mb-4">
+                    <div class="col-md-7">
+                        <div class="d-flex overflow-auto pb-2" id="statusFilters">
+                            <button class="tab-pill active" onclick="filterByStatus('all', this)">All</button>
+                            <button class="tab-pill" onclick="filterByStatus('pending', this)">Pending</button>
+                            <button class="tab-pill" onclick="filterByStatus('confirmed', this)">Confirmed</button>
+                            <button class="tab-pill" onclick="filterByStatus('completed', this)">Completed</button>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="search-container ms-md-auto mt-3 mt-md-0">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="aptSearchInput" class="form-control" placeholder="Search Client or Service...">
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="table-responsive">
-                    <table class="table custom-table mb-0">
+                    <table class="table custom-table" id="aptMainTable">
                         <thead>
-                            <tr>
+                            <tr class="text-uppercase small text-muted">
+                                <th>Schedule</th>
                                 <th>Client</th>
                                 <th>Service</th>
-                                <th>Schedule</th>
                                 <th>Stylist</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td><div class="fw-bold"><?php echo htmlspecialchars($row['client_name']); ?></div></td>
-                                <td><span class="badge-gold"><?php echo htmlspecialchars($row['service_name']); ?></span></td>
-                                <td>
-                                    <div class="small fw-bold"><?php echo date('D, M d', strtotime($row['apt_date'])); ?></div>
-                                    <div class="small text-muted"><?php echo date('h:i A', strtotime($row['apt_time'])); ?></div>
-                                </td>
-                                <td>
-                                    <span class="text-charcoal"><?php echo $row['stylist_name'] ?: '<em class="text-muted">Unassigned</em>'; ?></span>
-                                </td>
-                                <td>
-                                    <span class="badge-<?php echo ($row['status'] == 'confirmed') ? 'confirmed' : (($row['status'] == 'pending') ? 'pending' : 'cancelled'); ?>">
-                                        <?php echo strtoupper($row['status']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline" onclick='openEdit(<?php echo json_encode($row); ?>)'>
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
+                            <?php if($result->num_rows > 0): ?>
+                                <?php while($row = $result->fetch_assoc()): ?>
+                                <tr class="apt-row-item" data-status="<?php echo strtolower($row['status']); ?>">
+                                    <td>
+                                        <div class="fw-bold"><?php echo date('d M, Y', strtotime($row['apt_date'])); ?></div>
+                                        <small class="text-gold"><?php echo date('h:i A', strtotime($row['apt_time'])); ?></small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold name-cell"><?php echo htmlspecialchars($row['client_name']); ?></div>
+                                        <small class="text-muted phone-cell"><?php echo $row['client_phone']; ?></small>
+                                    </td>
+                                    <td class="service-cell"><?php echo $row['service_name']; ?></td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <i class="bi bi-person me-1"></i><?php echo $row['stylist_name'] ?? 'Unassigned'; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-<?php echo strtolower($row['status']); ?>">
+                                            <?php echo ucfirst($row['status']); ?>
+                                        </span>
+                                    </td>
+                                    <td class="text-end">
+                                        <select class="form-select form-select-sm d-inline-block w-auto" onchange="updateAptStatus(<?php echo $row['id']; ?>, this.value)">
+                                            <option value="" disabled selected>Update</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="confirmed">Confirm</option>
+                                            <option value="completed">Complete</option>
+                                            <option value="cancelled">Cancel</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr><td colspan="6" class="text-center py-5 text-muted">No appointments found.</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -117,56 +191,55 @@ $stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND 
         </div>
     </div>
 
-    <div class="modal-overlay" id="editAptModal">
-        <div class="modal-box">
-            <div class="panel-header">
-                <div class="panel-title">Manage Appointment</div>
-                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <form action="appointment_proc.php" method="POST">
-                <input type="hidden" name="apt_id" id="field_apt_id">
-                <div class="panel-body">
-                    <div class="mb-3">
-                        <label class="form-label-sm">Assign Stylist</label>
-                        <select name="stylist_id" id="field_stylist_id" class="form-input">
-                            <option value="">-- Select Specialist --</option>
-                            <?php 
-                            $stylists->data_seek(0);
-                            while($s = $stylists->fetch_assoc()): ?>
-                                <option value="<?php echo $s['id']; ?>"><?php echo $s['name']; ?></option>
-                            <?php endwhile; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-sm">Update Status</label>
-                        <select name="status" id="field_status" class="form-input">
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-sm">Admin Notes</label>
-                        <textarea name="notes" id="field_notes" class="form-input" rows="3"></textarea>
-                    </div>
-                </div>
-                <div class="panel-footer p-3 text-end border-top">
-                    <button type="submit" name="btn_update_apt" class="btn-gold px-4">Update Appointment</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        function openEdit(data) {
-            document.getElementById('field_apt_id').value = data.id;
-            document.getElementById('field_stylist_id').value = data.stylist_id || '';
-            document.getElementById('field_status').value = data.status;
-            document.getElementById('field_notes').value = data.notes || '';
-            openModal('editAptModal');
-        }
-    </script>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/dashboard.js"></script>
+    <script>
+        // 1. Search Logic
+        document.getElementById('aptSearchInput').addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            document.querySelectorAll('.apt-row-item').forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(term) ? "" : "none";
+            });
+        });
+
+        // 2. Tab Filter Logic
+        function filterByStatus(status, btn) {
+            document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.apt-row-item').forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                row.style.display = (status === 'all' || rowStatus === status) ? "" : "none";
+            });
+        }
+
+        // 3. Status Update Logic (FIXED)
+        function updateAptStatus(id, newStatus) {
+            if(confirm("Change status to " + newStatus + "?")) {
+                const formData = new URLSearchParams();
+                formData.append('id', id);
+                formData.append('status', newStatus);
+
+                fetch('update_apt_status.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if(data.success) {
+                        location.reload(); // Reload to update badges and stats
+                    } else {
+                        alert("Error updating status: " + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("A network error occurred.");
+                });
+            }
+        }
+    </script>
 </body>
 </html>
