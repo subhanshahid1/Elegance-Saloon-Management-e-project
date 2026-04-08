@@ -59,7 +59,7 @@
     <?php endif; ?>
 
     <?php if (getUserRole() === 'admin'): ?>
-        <a href="reports.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'reports.php') ? 'active' : ''; ?>">
+        <a href="analytics.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>">
             <i class="bi bi-bar-chart-line"></i>
             <span>Analytics</span>
         </a>
