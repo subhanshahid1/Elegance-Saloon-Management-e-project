@@ -56,7 +56,7 @@
                         <?php else: ?>
                             <!-- Client — show Book Appointment button -->
                             <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
-                                <a class="nav-login-btn" href="booking.php">Book Appointment</a>
+                                <a class="nav-login-btn" href="booking.php">Book Now</a>
                             </li>
 
                         <?php endif; ?>
