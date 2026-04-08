@@ -14,7 +14,7 @@
         <span>Dashboard</span>
     </a>
 
-    <a href="calendar.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'calendar.php') ? 'active' : ''; ?>">
+    <a href="schedule.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'schedule.php') ? 'active' : ''; ?>">
         <i class="bi bi-calendar3"></i>
         <span>Schedule</span>
     </a>
