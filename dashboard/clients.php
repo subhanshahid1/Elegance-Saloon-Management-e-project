@@ -4,28 +4,31 @@ require_once '../includes/db.php';
 
 checkAccess(['admin', 'receptionist']);
 
+$current_role = getUserRole();
+
 // 1. Fetch Stats
 $totalClients = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'client'")->fetch_assoc()['total'] ?? 0;
-$newClients = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'client' AND month(created_at) = month(now())")->fetch_assoc()['total'] ?? 0;
+$newClients = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'client' AND month(created_at) = month(now()) AND year(created_at) = year(now())")->fetch_assoc()['total'] ?? 0;
 
-// 2. Fetch Clients with Stylist Names and Last Visit Date
+// 2. Fetch Clients - FIXED Query to ensure preferred_stylist_id is explicitly selected for the JS fillEdit function
 $sql = "SELECT c.*, s.name as stylist_name, 
-        (SELECT MAX(apt_date) FROM appointments WHERE client_id = c.id) as last_visit
+        (SELECT MAX(apt_date) FROM appointments WHERE client_id = c.id AND status = 'completed') as last_visit
         FROM users c 
         LEFT JOIN users s ON c.preferred_stylist_id = s.id 
         WHERE c.role = 'client' 
         ORDER BY c.name ASC";
 $result = $conn->query($sql);
 
-// 3. Fetch Stylists for Dropdowns
-$stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND status = 'active'");
+// 3. Fetch Stylists
 $stylist_options = "";
-while($s = $stylists->fetch_assoc()) {
+$stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND status = 'active'");
+while ($s = $stylists->fetch_assoc()) {
     $stylist_options .= "<option value='{$s['id']}'>{$s['name']}</option>";
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,15 +38,53 @@ while($s = $stylists->fetch_assoc()) {
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
         .modal-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 1050; justify-content: center; align-items: center; padding: 15px;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1050;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
         }
-        .modal-box { background: white; width: 100%; max-width: 600px; border-radius: 8px; overflow: hidden; }
-        .search-container { position: relative; max-width: 400px; }
-        .search-container i { position: absolute; left: 10px; top: 10px; color: #aaa; }
-        .search-container input { padding-left: 35px; }
+
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 400px;
+        }
+
+        .search-container i {
+            position: absolute;
+            left: 12px;
+            top: 10px;
+            color: #aaa;
+        }
+
+        .search-container input {
+            padding-left: 38px;
+            border-radius: 20px;
+        }
+
+        .bg-gold-light {
+            background-color: #fcf9f0;
+            border: 1px solid #e9dfc4;
+            color: #b8860b;
+        }
     </style>
 </head>
+
 <body>
     <?php include('../includes/sidebar.php'); ?>
 
@@ -54,28 +95,30 @@ while($s = $stylists->fetch_assoc()) {
             <div class="row align-items-center mb-4">
                 <div class="col-12 d-md-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="panel-title fs-3">Client Management</h2>
-                        <p class="panel-subtitle">History, preferences, and contact records</p>
+                        <h2 class="panel-title fs-3">Client Database</h2>
+                        <p class="panel-subtitle">Manage preferences, history, and records</p>
                     </div>
-                    <button class="btn-gold" onclick="openModal('addClientModal')">
-                        <i class="bi bi-person-plus"></i> Add New Client
-                    </button>
+                    <?php if ($current_role === 'admin'): ?>
+                        <button class="btn-gold" onclick="openAddModal()">
+                            <i class="bi bi-person-plus-fill"></i> Add New Client
+                        </button>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <div class="row mb-4 g-3">
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid var(--gold);">
-                        <div class="fs-2 text-gold"><i class="bi bi-people"></i></div>
+                        <div class="fs-2 text-gold"><i class="bi bi-person-badge"></i></div>
                         <div>
                             <h4 class="m-0 fw-bold"><?php echo $totalClients; ?></h4>
-                            <small class="text-muted text-uppercase fw-bold">Total Database</small>
+                            <small class="text-muted text-uppercase fw-bold">Total Clients</small>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-6 col-lg-4">
                     <div class="panel p-3 d-flex align-items-center gap-3" style="border-left: 4px solid #198754;">
-                        <div class="fs-2 text-success"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="fs-2 text-success"><i class="bi bi-calendar-check"></i></div>
                         <div>
                             <h4 class="m-0 fw-bold"><?php echo $newClients; ?></h4>
                             <small class="text-muted text-uppercase fw-bold">New This Month</small>
@@ -85,50 +128,58 @@ while($s = $stylists->fetch_assoc()) {
             </div>
 
             <div class="panel p-3">
-                <div class="search-container mb-3">
+                <div class="search-container mb-4">
                     <i class="bi bi-search"></i>
-                    <input type="text" id="clientSearch" class="form-control" placeholder="Search by name, email or phone...">
+                    <input type="text" id="clientSearch" class="form-control" placeholder="Search by name, phone or preference...">
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="table custom-table" id="clientTable">
                         <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Contact</th>
+                            <tr class="text-muted small text-uppercase">
+                                <th>Client Info</th>
+                                <th>Contact Details</th>
+                                <th>Preferred Stylist</th>
                                 <th>Last Visit</th>
-                                <th class="d-none d-lg-table-cell">Preference</th>
-                                <th>Actions</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($row = $result->fetch_assoc()): 
-                                $clientData = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
+                            <?php while ($row = $result->fetch_assoc()):
+                                $clientJson = htmlspecialchars(json_encode($row), ENT_QUOTES, 'UTF-8');
                             ?>
-                            <tr>
-                                <td><div class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></div></td>
-                                <td>
-                                    <small><?php echo htmlspecialchars($row['phone']); ?></small><br>
-                                    <small class="text-muted"><?php echo htmlspecialchars($row['email']); ?></small>
-                                </td>
-                                <td><?php echo $row['last_visit'] ? date('d M, Y', strtotime($row['last_visit'])) : '<span class="text-muted">No visits</span>'; ?></td>
-                                <td class="d-none d-lg-table-cell">
-                                    <span class="badge bg-light text-dark border"><?php echo htmlspecialchars($row['stylist_name'] ?: 'No Preference'); ?></span>
-                                </td>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-primary" title="History" onclick='viewHistory(<?php echo $row['id']; ?>, "<?php echo addslashes($row['name']); ?>")'>
-                                            <i class="bi bi-clock-history"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary" onclick='fillEdit(<?php echo $clientData; ?>)'>
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <a href="client_proc.php?del_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete client?')">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></div>
+                                    </td>
+                                    <td>
+                                        <div class="small"><i class="bi bi-telephone me-1"></i><?php echo htmlspecialchars($row['phone']); ?></div>
+                                        <div class="small text-muted"><i class="bi bi-envelope me-1"></i><?php echo htmlspecialchars($row['email']); ?></div>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($row['stylist_name'])): ?>
+                                            <span class="badge bg-gold-light"><?php echo htmlspecialchars($row['stylist_name']); ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted small">No Preference</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?php echo $row['last_visit'] ? date('d M, Y', strtotime($row['last_visit'])) : '<span class="text-muted small">No history</span>'; ?></td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary" title="View History" onclick='viewHistory(<?php echo $row['id']; ?>, "<?php echo addslashes($row['name']); ?>")'>
+                                                <i class="bi bi-clock-history"></i>
+                                            </button>
+                                            <?php if ($current_role === 'admin'): ?>
+                                                <button class="btn btn-sm btn-outline-dark" onclick='fillEdit(<?php echo $clientJson; ?>)'>
+                                                    <i class="bi bi-pencil-square"></i>
+                                                </button>
+                                                <a href="client_proc.php?del_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this client?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
@@ -138,57 +189,76 @@ while($s = $stylists->fetch_assoc()) {
     </div>
 
     <div class="modal-overlay" id="historyModal">
-        <div class="modal-box p-0">
-            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="m-0 fw-bold">Visit History: <span id="histName" class="text-gold"></span></h5>
+        <div class="modal-box">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                <h5 class="m-0 fw-bold">Appointment History: <span id="histName" class="text-gold"></span></h5>
                 <button class="btn-close" onclick="closeModal()"></button>
             </div>
-            <div id="historyContent" class="p-3" style="max-height: 400px; overflow-y: auto;">
-                </div>
+            <div id="historyContent" class="p-4" style="max-height: 450px; overflow-y: auto;"></div>
         </div>
     </div>
 
     <div class="modal-overlay" id="clientModal">
         <div class="modal-box">
-            <div class="p-3 border-bottom d-flex justify-content-between">
-                <h5 class="m-0 fw-bold" id="modalTitle">Add Client</h5>
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="m-0 fw-bold" id="modalTitle">Manage Client Profile</h5>
                 <button class="btn-close" onclick="closeModal()"></button>
             </div>
             <form action="client_proc.php" method="POST">
                 <input type="hidden" name="c_id" id="f_id">
-                <div class="p-3">
+                <div class="p-4">
                     <div class="row g-3">
-                        <div class="col-md-6"><label class="small fw-bold">NAME</label><input type="text" name="c_name" id="f_name" class="form-control" required></div>
-                        <div class="col-md-6"><label class="small fw-bold">PHONE</label><input type="text" name="c_phone" id="f_phone" class="form-control" required></div>
-                        <div class="col-12"><label class="small fw-bold">EMAIL</label><input type="email" name="c_email" id="f_email" class="form-control"></div>
-                        <div class="col-md-6"><label class="small fw-bold">BIRTHDAY</label><input type="date" name="c_dob" id="f_dob" class="form-control"></div>
-                        <div class="col-md-6"><label class="small fw-bold">PREF. STYLIST</label>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">FULL NAME</label>
+                            <input type="text" name="c_name" id="f_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">PHONE NUMBER</label>
+                            <input type="text" name="c_phone" id="f_phone" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">EMAIL ADDRESS</label>
+                            <input type="email" name="c_email" id="f_email" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">PREFERRED STYLIST</label>
                             <select name="c_stylist" id="f_stylist" class="form-select">
-                                <option value="">None</option><?php echo $stylist_options; ?>
+                                <option value="">No preference</option>
+                                <?php echo $stylist_options; ?>
                             </select>
                         </div>
-                        <div class="col-12"><label class="small fw-bold">PREFERENCES / NOTES</label><textarea name="c_prefs" id="f_prefs" class="form-control" rows="2"></textarea></div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold text-muted">DATE OF BIRTH</label>
+                            <input type="date" name="c_dob" id="f_dob" class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="small fw-bold text-muted">PREFERENCES / NOTES</label>
+                            <textarea name="c_prefs" id="f_prefs" class="form-control" rows="3"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="p-3 bg-light border-top text-end">
-                    <button type="submit" name="save_client" class="btn-gold px-4">Save Changes</button>
+                    <button type="submit" name="save_client" class="btn-gold px-4">Save Profile</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
-        
-        // Search Logic
-        document.getElementById('clientSearch').addEventListener('keyup', function() {
-            let filter = this.value.toLowerCase();
-            let rows = document.querySelectorAll('#clientTable tbody tr');
-            rows.forEach(row => {
-                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
-            });
-        });
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
+        }
+
+        function openAddModal() {
+            document.getElementById('f_id').value = "0";
+            document.getElementById('modalTitle').innerText = "Add New Client";
+            document.querySelector('#clientModal form').reset();
+            openModal('clientModal');
+        }
 
         function fillEdit(data) {
             document.getElementById('modalTitle').innerText = "Edit Client Profile";
@@ -204,14 +274,21 @@ while($s = $stylists->fetch_assoc()) {
 
         function viewHistory(id, name) {
             document.getElementById('histName').innerText = name;
-            document.getElementById('historyContent').innerHTML = "Loading history...";
+            document.getElementById('historyContent').innerHTML = 'Loading...';
             openModal('historyModal');
             fetch(`get_client_history.php?id=${id}`)
                 .then(r => r.text())
                 .then(html => document.getElementById('historyContent').innerHTML = html);
         }
+
+        document.getElementById('clientSearch').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#clientTable tbody tr');
+            rows.forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+            });
+        });
     </script>
-    <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/dashboard.js"></script>
 </body>
+
 </html>
