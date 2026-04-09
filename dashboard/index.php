@@ -1,7 +1,7 @@
 <?php
 require_once '../includes/auth.php';
 require_once '../includes/db.php'; 
-checkAccess(['admin', 'receptionist']);
+checkAccess(['admin', 'receptionist' , 'stylist']);
 
 // --- 1. KEY METRICS ---
 // Get Today's Appointments

@@ -73,7 +73,7 @@
             <span>Feedback</span>
         </a>
 
-        <a href="admin.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'admin.php') ? 'active' : ''; ?>">
+        <a href="settings.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'settings.php') ? 'active' : ''; ?>">
             <i class="bi bi-gear"></i>
             <span>Settings</span>
         </a>
