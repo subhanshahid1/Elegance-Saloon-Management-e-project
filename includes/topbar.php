@@ -1,39 +1,51 @@
-<header class="topbar d-flex align-items-center px-3 shadow-sm bg-white" style="height: 70px;">
-    <button class="topbar-icon-btn d-lg-none border-0 bg-transparent me-2" id="sidebar-toggle">
-        <i class="bi bi-list fs-4"></i>
+<?php
+/* Topbar logic to fetch real-time notifications */
+require_once 'db.php';
+
+$role = getUserRole();
+$uid = getUserId();
+$notif_count = 0;
+
+// Admin and Receptionist see low stock alerts
+if (in_array($role, ['admin', 'receptionist'])) {
+    $stock_check = $conn->query("SELECT COUNT(*) as total FROM inventory WHERE quantity <= reorder_level");
+    $notif_count = $stock_check->fetch_assoc()['total'];
+}
+?>
+
+<header class="topbar">
+    <button class="topbar-icon-btn d-lg-none me-2" id="sidebar-toggle" title="Toggle Menu">
+        <i class="bi bi-list"></i>
     </button>
 
-    <div class="topbar-title fw-bold" id="page-title">Dashboard</div>
+    <div class="topbar-title" id="page-title">Dashboard Overview</div>
     
-    <div class="ms-auto d-flex align-items-center gap-3">
+    <div class="ms-auto d-flex align-items-center gap-2">
         <div class="dropdown">
-            <button class="topbar-icon-btn border-0 bg-transparent position-relative" data-bs-toggle="dropdown">
-                <i class="bi bi-bell fs-5"></i>
-                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
-                    <?php 
-                    // Counts low stock items as notifications
-                    $notif_count = $conn->query("SELECT COUNT(*) FROM inventory WHERE quantity <= reorder_level")->fetch_row()[0];
-                    echo $notif_count;
-                    ?>
-                </span>
+            <button class="topbar-icon-btn position-relative" data-bs-toggle="dropdown">
+                <i class="bi bi-bell"></i>
+                <?php if($notif_count > 0): ?>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 10px;">
+                        <?php echo $notif_count; ?>
+                    </span>
+                <?php endif; ?>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width: 250px;">
-                <li class="p-2 border-bottom fw-bold small">Inventory Alerts</li>
-                <?php 
-                $low_stock = $conn->query("SELECT name, quantity FROM inventory WHERE quantity <= reorder_level LIMIT 3");
-                while($item = $low_stock->fetch_assoc()): ?>
-                    <li><a class="dropdown-item small py-2" href="inventory.php">
-                        <i class="bi bi-exclamation-circle text-danger me-2"></i>
-                        <?php echo $item['name']; ?> is low (<?php echo $item['quantity']; ?> left)
-                    </a></li>
-                <?php endwhile; ?>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-center small text-gold" href="inventory.php">Manage Stock</a></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-0" style="width: 280px;">
+                <li class="p-3 border-bottom"><h6 class="mb-0 fw-bold">Alerts</h6></li>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <?php if($notif_count > 0): ?>
+                        <li><a class="dropdown-item p-3 text-danger small" href="inventory.php">
+                            <i class="bi bi-box-seam me-2"></i> Low stock items detected!
+                        </a></li>
+                    <?php else: ?>
+                        <li class="p-4 text-center text-muted small">No new notifications</li>
+                    <?php endif; ?>
+                </div>
             </ul>
         </div>
 
-        <a href="appointments.php" class="topbar-icon-btn border-0 bg-transparent text-dark" title="Quick Appointment">
-            <i class="bi bi-plus-circle fs-5"></i>
-        </a>
+        <button class="topbar-icon-btn" title="Quick Actions">
+            <i class="bi bi-plus-lg"></i>
+        </button>
     </div>
 </header>

@@ -59,14 +59,12 @@
     <?php endif; ?>
 
     <?php if (getUserRole() === 'admin'): ?>
+        <div class="nav-section-label">System</div>
+
         <a href="analytics.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'analytics.php') ? 'active' : ''; ?>">
             <i class="bi bi-bar-chart-line"></i>
             <span>Analytics</span>
         </a>
-    <?php endif; ?>
-
-    <?php if (getUserRole() === 'admin'): ?>
-        <div class="nav-section-label">System</div>
 
         <a href="feedback.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'feedback.php') ? 'active' : ''; ?>">
             <i class="bi bi-chat-heart"></i>

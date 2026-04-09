@@ -1,54 +1,42 @@
 <?php
 
-/* ===== INCLUDE CONFIG ===== */
+/* Include configuration for SITE_URL and other constants */
 require_once __DIR__ . '/../config/config.php';
 
+/* Authentication functions for session management */
 
-/* ===== STEP 1 CHECK IF LOGGED IN ===== */
-/* This function checks if a user is logged in at all */
+// Check if a session is active and a user ID is set
 function isLoggedIn() {
     return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 }
 
-
-/* ===== STEP 2 GET CURRENT USER ROLE ===== */
-/* Returns the role of whoever is logged in right now */
+// Get the current user role from session
 function getUserRole() {
     return isset($_SESSION['role']) ? $_SESSION['role'] : null;
 }
 
-
-/* ===== STEP 3 GET CURRENT USER ID ===== */
-/* Returns the ID of whoever is logged in right now */
-/* Used for filtering appointments/data by user */
+// Get the current user ID for database filtering
 function getUserId() {
     return isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 }
 
-
-/* ===== STEP 4 GET CURRENT USER NAME ===== */
+// Get the display name of the logged in user
 function getUserName() {
     return isset($_SESSION['user_name']) ? $_SESSION['user_name'] : null;
 }
 
-
-/* ===== STEP 5 MAIN ACCESS CHECK FUNCTION ===== */
-/* This is what every dashboard page calls */
-/* Pass an array of roles that are allowed on that page */
+// Protect pages by checking if user role is in the allowed array
 function checkAccess($allowedRoles = []) {
 
-    /* --- If not logged in at all send to login --- */
+    // Redirect to login if no active session
     if (!isLoggedIn()) {
         header('Location: ' . SITE_URL . '/login.php');
         exit();
     }
 
-    /* --- If logged in but role not allowed send to unauthorized page --- */
-    if (!in_array(getUserRole(), $allowedRoles)) {
+    // Redirect if user role does not have permission for this specific page
+    if (!empty($allowedRoles) && !in_array(getUserRole(), $allowedRoles)) {
         header('Location: ' . SITE_URL . '/unauthorized.php');
         exit();
     }
-
-    /* --- If all checks pass allow access --- */
-    /* Page continues loading normally */
 }
