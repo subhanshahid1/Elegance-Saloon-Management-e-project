@@ -6,38 +6,49 @@ $uid = getUserId();
 $role = getUserRole();
 $events = [];
 
-// 1. Fetch Appointments
-$sql = "SELECT a.*, u.name as client, s.name as service 
-        FROM appointments a 
-        JOIN users u ON a.client_id = u.id 
-        JOIN services s ON a.service_id = s.id";
-
+// 1. Fetch Appointments (Joining users and services based on DB schema)
 if ($role === 'stylist') {
-    $sql .= " WHERE a.stylist_id = $uid";
+    $stmt = $conn->prepare("SELECT a.*, u.name as client, s.name as service 
+                            FROM appointments a 
+                            JOIN users u ON a.client_id = u.id 
+                            JOIN services s ON a.service_id = s.id 
+                            WHERE a.stylist_id = ?");
+    $stmt->bind_param("i", $uid);
+} else {
+    // Admin/Receptionist sees everything
+    $stmt = $conn->prepare("SELECT a.*, u.name as client, s.name as service 
+                            FROM appointments a 
+                            JOIN users u ON a.client_id = u.id 
+                            JOIN services s ON a.service_id = s.id");
 }
 
-$res = $conn->query($sql);
-while($row = $res->fetch_assoc()) {
+$stmt->execute();
+$res = $stmt->get_result();
+while ($row = $res->fetch_assoc()) {
     $events[] = [
         'title' => $row['client'] . ' - ' . $row['service'],
         'start' => $row['apt_date'] . 'T' . $row['apt_time'],
-        'description' => 'Client: ' . $row['client'],
         'status' => $row['status'],
         'type' => 'appointment'
     ];
 }
 
 // 2. Fetch Staff Shifts
-$shift_sql = ($role === 'stylist') ? "SELECT * FROM staff_shifts WHERE staff_id = $uid" : "SELECT s.*, u.name as staff_name FROM staff_shifts s JOIN users u ON s.staff_id = u.id";
-$s_res = $conn->query($shift_sql);
-while($row = $s_res->fetch_assoc()) {
-    $name = isset($row['staff_name']) ? $row['staff_name'] . ' Shift' : 'My Shift';
+if ($role === 'stylist') {
+    $stmt2 = $conn->prepare("SELECT * FROM staff_shifts WHERE staff_id = ?");
+    $stmt2->bind_param("i", $uid);
+} else {
+    $stmt2 = $conn->prepare("SELECT s.*, u.name as staff_name FROM staff_shifts s JOIN users u ON s.staff_id = u.id");
+}
+
+$stmt2->execute();
+$s_res = $stmt2->get_result();
+while ($row = $s_res->fetch_assoc()) {
     $events[] = [
-        'title' => $name,
+        'title' => (isset($row['staff_name']) ? $row['staff_name'] : 'My') . ' Shift',
         'start' => $row['shift_date'] . 'T' . $row['start_time'],
         'end' => $row['shift_date'] . 'T' . $row['end_time'],
-        'type' => 'shift',
-        'allDay' => false
+        'type' => 'shift'
     ];
 }
 
