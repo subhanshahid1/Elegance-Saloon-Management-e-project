@@ -5,7 +5,7 @@ require_once '../includes/db.php';
 // Check access
 checkAccess(['admin', 'receptionist']);
 
-// --- HANDLE ADD NEW ITEM ---
+// HANDLE ADD NEW ITEM 
 if (isset($_POST['btn_save'])) {
     $name = $_POST['ins_name'];
     $category = $_POST['ins_category'];
@@ -26,8 +26,8 @@ if (isset($_POST['btn_save'])) {
     exit();
 }
 
-// --- HANDLE UPDATE ITEM ---
-if (isset($_POST['btn_update'])) {
+// --- HANDLE UPDATE ITEM
+if (isset($_POST['update'])) {
     $id = $_POST['upd_id'];
     $name = $_POST['upd_name'];
     $qty = $_POST['upd_qty'];
@@ -45,7 +45,7 @@ if (isset($_POST['btn_update'])) {
     exit();
 }
 
-// --- HANDLE DELETE ITEM ---
+// HANDLE DELETE ITEM
 if (isset($_GET['del_id'])) {
     $id = $_GET['del_id'];
     
@@ -62,4 +62,4 @@ if (isset($_GET['del_id'])) {
 
 // If someone tries to access this file directly without posting data
 header("Location: inventory.php");
-exit();
+exit(); 

@@ -54,4 +54,4 @@ if (isset($_GET['del_id'])) {
 }
 
 header("Location: suppliers.php");
-exit();
+exit(); 

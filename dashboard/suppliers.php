@@ -222,4 +222,4 @@ $result = $conn->query("SELECT * FROM suppliers ORDER BY supplier_name ASC");
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
-</html>
+</html> 

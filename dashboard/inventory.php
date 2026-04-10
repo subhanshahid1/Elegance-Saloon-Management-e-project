@@ -251,4 +251,4 @@ $inventory = $conn->query("SELECT i.*, s.supplier_name FROM inventory i LEFT JOI
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
-</html>
+</html> 
