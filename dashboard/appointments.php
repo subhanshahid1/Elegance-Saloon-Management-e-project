@@ -214,6 +214,7 @@ if ($current_role !== 'stylist') {
             </div>
         </div>
     </div>
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
         function filterByStatus(status, btn) {
             document.querySelectorAll('.tab-pill').forEach(b => b.classList.remove('active'));
@@ -250,6 +251,7 @@ if ($current_role !== 'stylist') {
             });
         }
     </script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 
 </html>
