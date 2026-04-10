@@ -2,15 +2,11 @@
 require_once '../includes/auth.php';
 require_once '../includes/db.php';
 
-// Access Control: All staff roles can enter, but UI filters data
 checkAccess(['admin', 'receptionist', 'stylist']);
 
 $current_user_id = getUserId();
 $current_role = getUserRole();
 
-/**
- * DATA FETCHING BASED ON ROLE
- */
 if ($current_role === 'stylist') {
     $query = "SELECT * FROM users WHERE id = $current_user_id";
 } else {
@@ -18,7 +14,6 @@ if ($current_role === 'stylist') {
 }
 $result = $conn->query($query);
 
-// Total Team Count for Displays
 $countRes = $conn->query("SELECT COUNT(*) as total FROM users WHERE role IN ('admin', 'receptionist', 'stylist')");
 $totalStaff = $countRes->fetch_assoc()['total'];
 ?>
@@ -34,6 +29,7 @@ $totalStaff = $countRes->fetch_assoc()['total'];
     <style>
         .comm-card { background: #fcf9f0; border: 1px solid #e9dfc4; border-radius: 10px; }
         .schedule-box { font-size: 0.85rem; color: #555; background: #f8f9fa; padding: 10px; border-radius: 5px; }
+        input[readonly], textarea[readonly] { background-color: #e9ecef !important; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -43,7 +39,6 @@ $totalStaff = $countRes->fetch_assoc()['total'];
         <?php include('../includes/topbar.php'); ?>
 
         <div class="content-area container-fluid px-4 py-4">
-            
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 class="fw-bold m-0">Staff Management</h2>
@@ -114,7 +109,7 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                                 <td>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-sm btn-outline-dark" onclick='editStaff(<?php echo json_encode($row); ?>)'>
-                                            <i class="bi bi-pencil-square"></i> Edit
+                                            <i class="bi bi-pencil-square"></i> <?php echo ($current_role === 'receptionist') ? 'Manage Shift' : 'Edit'; ?>
                                         </button>
                                         <?php if($current_role === 'admin'): ?>
                                             <a href="staff_proc.php?delete_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this staff member?')">
@@ -133,42 +128,10 @@ $totalStaff = $countRes->fetch_assoc()['total'];
         </div>
     </div>
 
-    <div class="modal-overlay" id="addStaffModal">
-        <div class="modal-box" style="max-width: 600px;">
-            <div class="panel-header">
-                <h5 class="m-0 fw-bold">Register New Staff</h5>
-                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
-            </div>
-            <form action="staff_proc.php" method="POST">
-                <div class="panel-body">
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="small fw-bold mb-1">Full Name</label><input type="text" name="name" class="form-input" required></div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold mb-1">Role</label>
-                            <select name="role" class="form-input" required>
-                                <option value="stylist">Stylist</option>
-                                <option value="receptionist">Receptionist</option>
-                                <option value="admin">Admin</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6"><label class="small fw-bold mb-1">Email</label><input type="email" name="email" class="form-input" required></div>
-                        <div class="col-md-6"><label class="small fw-bold mb-1">Password</label><input type="password" name="password" class="form-input" required></div>
-                        <div class="col-md-6"><label class="small fw-bold mb-1">Commission Rate (%)</label><input type="number" step="0.01" name="commission_rate" class="form-input" value="0.00"></div>
-                        <div class="col-md-6"><label class="small fw-bold mb-1">Work Schedule</label><input type="text" name="work_schedule" class="form-input" placeholder="e.g. Mon-Fri 9am-5pm"></div>
-                    </div>
-                </div>
-                <div class="panel-header border-top justify-content-end gap-2">
-                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
-                    <button type="submit" name="add_staff" class="btn-gold">Add Staff</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="editStaffModal">
         <div class="modal-box" style="max-width: 600px;">
             <div class="panel-header">
-                <h5 class="m-0 fw-bold">Update Staff Profile</h5>
+                <h5 class="m-0 fw-bold"><?php echo ($current_role === 'receptionist') ? 'Manage Work Schedule' : 'Update Staff Profile'; ?></h5>
                 <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="staff_proc.php" method="POST">
@@ -177,11 +140,11 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="small fw-bold mb-1">Full Name</label>
-                            <input type="text" name="name" id="edit_name" class="form-input" required>
+                            <input type="text" name="name" id="edit_name" class="form-input" required <?php echo ($current_role === 'receptionist') ? 'readonly' : ''; ?>>
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold mb-1">Email</label>
-                            <input type="email" name="email" id="edit_email" class="form-input" required>
+                            <input type="email" name="email" id="edit_email" class="form-input" required <?php echo ($current_role === 'receptionist') ? 'readonly' : ''; ?>>
                         </div>
                         <div class="col-md-12">
                             <label class="small fw-bold mb-1">Work Schedule (Assign Shifts)</label>
@@ -208,8 +171,6 @@ $totalStaff = $countRes->fetch_assoc()['total'];
     </div>
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
-    <script src="../assets/js/dashboard.js"></script>
-
     <script>
         function openModal(id) { 
             const modal = document.getElementById(id);
@@ -228,5 +189,6 @@ $totalStaff = $countRes->fetch_assoc()['total'];
             openModal('editStaffModal');
         }
     </script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 </html>

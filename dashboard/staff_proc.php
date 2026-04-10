@@ -25,12 +25,17 @@ if (isset($_POST['add_staff'])) {
 
 if (isset($_POST['update_staff'])) {
     $id = (int)$_POST['staff_id'];
-    $name = $conn->real_escape_string($_POST['name']);
-    $email = $conn->real_escape_string($_POST['email']);
     $sched = $conn->real_escape_string($_POST['work_schedule']);
-    $query = "UPDATE users SET name='$name', email='$email', work_schedule='$sched'";
+    
+    // If Receptionist, they ONLY update the schedule. 
+    // If Admin, they can update everything.
+    if ($current_role === 'receptionist') {
+        $query = "UPDATE users SET work_schedule='$sched' WHERE id=$id";
+    } else {
+        $name = $conn->real_escape_string($_POST['name']);
+        $email = $conn->real_escape_string($_POST['email']);
+        $query = "UPDATE users SET name='$name', email='$email', work_schedule='$sched'";
 
-    if ($current_role === 'admin') {
         if(isset($_POST['commission_rate'])) {
             $comm = (float)$_POST['commission_rate'];
             $query .= ", commission_rate=$comm";
@@ -39,9 +44,14 @@ if (isset($_POST['update_staff'])) {
             $pass = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $query .= ", password='$pass'";
         }
+        $query .= " WHERE id=$id";
     }
-    $query .= " WHERE id=$id";
-    if($conn->query($query)) { header("Location: staff.php?msg=updated"); }
+
+    if($conn->query($query)) { 
+        header("Location: staff.php?msg=updated"); 
+    } else {
+        header("Location: staff.php?msg=error");
+    }
     exit();
 }
 

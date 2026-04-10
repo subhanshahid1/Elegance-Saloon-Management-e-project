@@ -289,6 +289,7 @@ while ($s = $stylists->fetch_assoc()) {
             });
         });
     </script>
+    <script src="../assets/js/dashboard.js"></script>
 </body>
 
 </html>
