@@ -54,4 +54,4 @@ if (isset($_GET['delete_id'])) {
     $conn->query("DELETE FROM payments WHERE id = $id");
     header("Location: payments.php?msg=deleted");
     exit();
-}
+} 

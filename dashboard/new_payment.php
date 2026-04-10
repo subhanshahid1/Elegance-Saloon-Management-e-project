@@ -90,4 +90,4 @@ $stylists = $conn->query("SELECT id, name, commission_rate FROM users WHERE role
         }
     </script>
 </body>
-</html>
+</html> 
