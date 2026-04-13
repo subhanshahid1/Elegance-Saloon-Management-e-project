@@ -26,8 +26,8 @@ if (isset($_POST['btn_save'])) {
     exit();
 }
 
-// --- HANDLE UPDATE ITEM
-if (isset($_POST['update'])) {
+// HANDLE UPDATE ITEM
+if (isset($_POST['btn_update'])) {
     $id = $_POST['upd_id'];
     $name = $_POST['upd_name'];
     $qty = $_POST['upd_qty'];
