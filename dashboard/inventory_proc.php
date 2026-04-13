@@ -27,7 +27,8 @@ if (isset($_POST['btn_save'])) {
 }
 
 // HANDLE UPDATE ITEM
-if (isset($_POST['btn_update'])) {
+// HANDLE UPDATE ITEM
+if (isset($_POST['btn_update'])) { // Fixed the name from 'update' to 'btn_update'
     $id = $_POST['upd_id'];
     $name = $_POST['upd_name'];
     $qty = $_POST['upd_qty'];
@@ -38,6 +39,16 @@ if (isset($_POST['btn_update'])) {
     $stmt->bind_param("sidii", $name, $qty, $cost, $reorder, $id);
 
     if ($stmt->execute()) {
+        
+        // --- NOTIFICATION LOGIC START ---
+        // If the new quantity is at or below the reorder level, notify the Admin
+        if ($qty <= $reorder) {
+            $admin_id = 1; // Change to your actual Admin User ID
+            $msg = "Alert: Item '$name' has reached low stock level ($qty left).";
+            notifyUser($conn, $admin_id, "Inventory Alert", $msg, "inventory", "inventory.php");
+        }
+        // --- NOTIFICATION LOGIC END ---
+
         header("Location: inventory.php?msg=updated");
     } else {
         echo "Error: " . $conn->error;
