@@ -5,8 +5,7 @@ $role = getUserRole();
 $uid = getUserId();
 $notifications = [];
 
-// --- 1. SYSTEM-GENERATED NOTIFICATIONS (From the Database) ---
-// This fetches entries created by the notifyUser() function
+// --- 1. SYSTEM-GENERATED NOTIFICATIONS ---
 $db_notif = $conn->prepare("SELECT title, message, link, type FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 5");
 $db_notif->bind_param("i", $uid);
 $db_notif->execute();
@@ -16,7 +15,6 @@ while($row = $db_res->fetch_assoc()) {
     $icon = 'bi-info-circle';
     $color = 'text-info';
     
-    // Customize icon based on type
     if($row['type'] == 'appointment') { $icon = 'bi-calendar-check'; $color = 'text-primary'; }
     if($row['type'] == 'payment') { $icon = 'bi-cash-stack'; $color = 'text-success'; }
 
@@ -29,7 +27,7 @@ while($row = $db_res->fetch_assoc()) {
     ];
 }
 
-// --- 2. AUTOMATED LOGIC FOR STYLIST (New Assignments) ---
+// --- 2. AUTOMATED LOGIC FOR STYLIST ---
 if ($role == 'stylist') {
     $sql = "SELECT id, apt_date FROM appointments 
             WHERE stylist_id = ? AND status = 'pending' 
@@ -49,11 +47,9 @@ if ($role == 'stylist') {
     }
 }
 
-// --- 3. LOGIC FOR RECEPTIONIST & ADMIN (Stock & Bookings) ---
+// --- 3. LOGIC FOR RECEPTIONIST & ADMIN ---
 if (in_array($role, ['admin', 'receptionist'])) {
-    // Corrected column name from stock_quantity to quantity
     $stock_check = $conn->query("SELECT name FROM inventory WHERE quantity <= 5");
-    
     if ($stock_check) {
         while($item = $stock_check->fetch_assoc()) {
             $notifications[] = [
@@ -66,7 +62,6 @@ if (in_array($role, ['admin', 'receptionist'])) {
         }
     }
 
-    // Pending Appointments check
     $appt_check = $conn->query("SELECT id FROM appointments WHERE status = 'pending' LIMIT 3");
     if ($appt_check) {
         while($appt = $appt_check->fetch_assoc()) {
@@ -81,9 +76,8 @@ if (in_array($role, ['admin', 'receptionist'])) {
     }
 }
 
-// --- 4. ADMIN ONLY (New Feedback) ---
+// --- 4. ADMIN ONLY ---
 if ($role == 'admin') {
-    // Assuming you have a 'contact_messages' or 'feedback' table
     $fb_check = $conn->query("SELECT first_name FROM contact_messages ORDER BY created_at DESC LIMIT 1");
     if($fb_res = $fb_check->fetch_assoc()) {
         $notifications[] = [
@@ -100,10 +94,20 @@ $notif_count = count($notifications);
 ?>
 
 <header class="topbar">
-    <div class="topbar-title">Dashboard Overview</div>
+    <div class="d-flex align-items-center">
+        <button class="border-0 bg-transparent me-3 d-md-none text-dark" id="sidebar-toggle" type="button">
+            <i class="bi bi-list fs-2"></i>
+        </button>
+
+        <div>
+            <div class="topbar-title">Dashboard Overview</div>
+            <small id="topbar-date" class="text-muted d-none d-md-block" style="font-size: 11px;"></small>
+        </div>
+    </div>
+    
     <div class="ms-auto d-flex align-items-center gap-2">
         <div class="dropdown">
-            <button class="topbar-icon-btn position-relative" data-bs-toggle="dropdown">
+            <button class="topbar-icon-btn position-relative" data-bs-toggle="dropdown" type="button">
                 <i class="bi bi-bell"></i>
                 <?php if($notif_count > 0): ?>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -122,7 +126,7 @@ $notif_count = count($notifications);
                     <?php if($notif_count > 0): ?>
                         <?php foreach($notifications as $n): ?>
                             <li>
-                                <a class="dropdown-item p-3 border-bottom d-flex align-items-center" href="mark_read.php?redirect=<?php echo $n['link']; ?>"></a>
+                                <a class="dropdown-item p-3 border-bottom d-flex align-items-center" href="mark_read.php?redirect=<?php echo $n['link']; ?>">
                                     <div class="me-3 <?php echo $n['color']; ?>">
                                         <i class="bi <?php echo $n['icon']; ?> fs-4"></i>
                                     </div>
