@@ -40,3 +40,16 @@ function checkAccess($allowedRoles = []) {
         exit();
     }
 }
+
+/* Creates a notification for a specific user. */
+function notifyUser($conn, $user_id, $title, $message, $type = 'general', $link = 'index.php') {
+    // Prevent duplicate notifications for the same event
+    $check = $conn->prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ? AND is_read = 0");
+    $check->bind_param("is", $user_id, $message);
+    $check->execute();
+    if ($check->get_result()->num_rows > 0) return; 
+
+    $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("issss", $user_id, $title, $message, $type, $link);
+    return $stmt->execute();
+}

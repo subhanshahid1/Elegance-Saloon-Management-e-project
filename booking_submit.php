@@ -3,6 +3,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
 require_once 'includes/db.php';
+require_once 'includes/auth.php'; // Required to use notifyUser()
 
 $response = ['success' => false, 'message' => 'Unknown error'];
 
@@ -22,7 +23,7 @@ try {
         throw new Exception('Please select a service, date, and time.');
     }
 
-    // Double-check availability (Security requirement)
+    // Double-check availability
     $check = $conn->prepare("SELECT id FROM appointments WHERE apt_date = ? AND apt_time = ? AND status != 'cancelled'");
     $check->bind_param("ss", $apt_date, $apt_time);
     $check->execute();
@@ -34,8 +35,23 @@ try {
     $stmt->bind_param("iiisss", $client_id, $stylist_id, $service_id, $apt_date, $apt_time, $notes);
     
     if ($stmt->execute()) {
-        // REQ: Automated confirmation notification
-        // In production, use: mail($_SESSION['user_email'], "Booking Received", "We have received your request...");
+        
+        // --- NOTIFICATION LOGIC START ---
+        $formatted_time = date('h:i A', strtotime($apt_time));
+        
+        // 1. Notify Admin (Assuming Admin User ID is 1)
+        $admin_msg = "New booking from client ID #$client_id for $apt_date at $formatted_time.";
+        notifyUser($conn, 1, "New Booking Request", $admin_msg, "appointment", "appointments.php");
+
+        // 2. Notify the Stylist (if assigned)
+        if ($stylist_id) {
+            $stylist_msg = "You have a new appointment assigned for $apt_date at $formatted_time.";
+            notifyUser($conn, $stylist_id, "New Appointment", $stylist_msg, "appointment", "appointments.php");
+        }
+
+        // 3. Notify the Client (Self)
+        notifyUser($conn, $client_id, "Booking Received", "Your request for $apt_date at $formatted_time is pending approval.", "appointment", "index.php");
+        // --- NOTIFICATION LOGIC END ---
         
         $response = ['success' => true, 'message' => 'Appointment booked successfully!'];
     } else {
