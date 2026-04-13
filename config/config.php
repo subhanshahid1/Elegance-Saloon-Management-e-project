@@ -9,7 +9,7 @@ define('DB_NAME', 'saloon');
 define('SITE_NAME', 'Elegance Salon');
 define('SITE_URL',  'http://localhost/elegance-saloon-management-e-project');
 
-/* ===== EMAIL CONFIGURATION ===== */
+/* EMAIL CONFIGURATION */
 define('MAIL_HOST',     'smtp.gmail.com');
 define('MAIL_PORT',     587);
 define('MAIL_USERNAME', 'subhan.priv.acc@gmail.com');
