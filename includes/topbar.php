@@ -17,6 +17,7 @@ while($row = $db_res->fetch_assoc()) {
     
     if($row['type'] == 'appointment') { $icon = 'bi-calendar-check'; $color = 'text-primary'; }
     if($row['type'] == 'payment') { $icon = 'bi-cash-stack'; $color = 'text-success'; }
+    if($row['type'] == 'feedback') { $icon = 'bi-chat-left-dots'; $color = 'text-info'; }
 
     $notifications[] = [
         'icon' => $icon,
@@ -76,14 +77,15 @@ if (in_array($role, ['admin', 'receptionist'])) {
     }
 }
 
-// --- 4. ADMIN ONLY ---
+// --- 4. ADMIN ONLY (Feedback Alert) ---
 if ($role == 'admin') {
-    $fb_check = $conn->query("SELECT first_name FROM contact_messages ORDER BY created_at DESC LIMIT 1");
-    if($fb_res = $fb_check->fetch_assoc()) {
+    // Only shows if a new feedback was received in the last 24 hours
+    $fb_check = $conn->query("SELECT name FROM feedbacks WHERE created_at >= NOW() - INTERVAL 1 DAY ORDER BY created_at DESC LIMIT 1");
+    if($fb_check && $fb_res = $fb_check->fetch_assoc()) {
         $notifications[] = [
             'icon' => 'bi-chat-left-dots',
-            'title' => 'New Feedback',
-            'msg' => "Message received from " . $fb_res['first_name'],
+            'title' => 'Recent Feedback',
+            'msg' => "New review from " . $fb_res['name'],
             'link' => 'feedback.php',
             'color' => 'text-info'
         ];
