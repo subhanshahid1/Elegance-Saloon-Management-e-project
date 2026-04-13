@@ -5,6 +5,17 @@ require_once '../includes/db.php';
 // Check access
 checkAccess(['admin', 'receptionist']);
 
+/* HELPER LOGIC: Notify all staff (Admins/Receptionists) about inventory issues */
+function notifyStaffInventory($conn, $name, $qty) {
+    // Find all users who are either admins or receptionists
+    $staff_query = $conn->query("SELECT id FROM users WHERE role IN ('admin', 'receptionist')");
+    $msg = "Low Stock Alert: '$name' has only $qty units left.";
+    
+    while($staff = $staff_query->fetch_assoc()) {
+        notifyUser($conn, $staff['id'], "Inventory Alert", $msg, "inventory", "inventory.php");
+    }
+}
+
 // HANDLE ADD NEW ITEM 
 if (isset($_POST['btn_save'])) {
     $name = $_POST['ins_name'];
@@ -18,7 +29,10 @@ if (isset($_POST['btn_save'])) {
     $stmt->bind_param("ssiddi", $name, $category, $qty, $cost, $reorder, $supplier);
 
     if ($stmt->execute()) {
-        // Redirect back with success message
+        // Trigger notification if added item is already low stock
+        if ($qty <= $reorder) {
+            notifyStaffInventory($conn, $name, $qty);
+        }
         header("Location: inventory.php?msg=added");
     } else {
         echo "Error: " . $conn->error;
@@ -27,8 +41,7 @@ if (isset($_POST['btn_save'])) {
 }
 
 // HANDLE UPDATE ITEM
-// HANDLE UPDATE ITEM
-if (isset($_POST['btn_update'])) { // Fixed the name from 'update' to 'btn_update'
+if (isset($_POST['btn_update'])) {
     $id = $_POST['upd_id'];
     $name = $_POST['upd_name'];
     $qty = $_POST['upd_qty'];
@@ -39,15 +52,10 @@ if (isset($_POST['btn_update'])) { // Fixed the name from 'update' to 'btn_updat
     $stmt->bind_param("sidii", $name, $qty, $cost, $reorder, $id);
 
     if ($stmt->execute()) {
-        
-        // --- NOTIFICATION LOGIC START ---
-        // If the new quantity is at or below the reorder level, notify the Admin
+        // Trigger notification for all staff if quantity drops below reorder level
         if ($qty <= $reorder) {
-            $admin_id = 1; // Change to your actual Admin User ID
-            $msg = "Alert: Item '$name' has reached low stock level ($qty left).";
-            notifyUser($conn, $admin_id, "Inventory Alert", $msg, "inventory", "inventory.php");
+            notifyStaffInventory($conn, $name, $qty);
         }
-        // --- NOTIFICATION LOGIC END ---
 
         header("Location: inventory.php?msg=updated");
     } else {
@@ -73,4 +81,4 @@ if (isset($_GET['del_id'])) {
 
 // If someone tries to access this file directly without posting data
 header("Location: inventory.php");
-exit(); 
+exit();
