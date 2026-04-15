@@ -80,7 +80,7 @@ $res = mysqli_query($conn, $query);
                                 <tr>
                                     <td>
                                         <div style="font-weight: 600; color: #fff;"><?php echo date('D, M d', strtotime($row['apt_date'])); ?></div>
-                                        <small class="text-muted"><?php echo date('h:i A', strtotime($row['apt_time'])); ?></small>
+                                        <small class=""><?php echo date('h:i A', strtotime($row['apt_time'])); ?></small>
                                     </td>
                                     <td><?php echo $row['service_name']; ?></td>
                                     <td>
