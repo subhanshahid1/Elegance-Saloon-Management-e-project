@@ -64,7 +64,7 @@ $stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist'");
                 </div>
 
                 <button type="submit" class="btn-gold">Update Schedule</button>
-                <a href="appointment_history.php" class="d-block text-center mt-3 text-muted small text-decoration-none">Back to History</a>
+                <a href="appointment_history.php" class="d-block text-center mt-3 small text-decoration-none">Back to History</a>
             </form>
         </div>
     </div>
