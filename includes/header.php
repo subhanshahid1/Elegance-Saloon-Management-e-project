@@ -1,7 +1,7 @@
 <?php 
-require_once 'includes/db.php'; // Ensure DB connection is included
+require_once 'includes/db.php'; 
 
-/* Fetch active service categories for the dropdown */
+/* To Fetch active service categories for the dropdown */
 $category_query = "SELECT DISTINCT category FROM services WHERE status = 'active' ORDER BY category ASC";
 $categories_result = mysqli_query($conn, $category_query);
 ?>

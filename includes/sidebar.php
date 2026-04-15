@@ -22,7 +22,6 @@
     <a href="appointments.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'appointments.php') ? 'active' : ''; ?>">
         <i class="bi bi-journal-text"></i>
         <span>Appointments</span>
-        <span class="nav-badge">4</span>
     </a>
 
     <a href="staff.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'staff.php') ? 'active' : ''; ?>">
