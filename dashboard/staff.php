@@ -170,6 +170,57 @@ $totalStaff = $countRes->fetch_assoc()['total'];
         </div>
     </div>
 
+    <div class="modal-overlay" id="addStaffModal">
+        <div class="modal-box" style="max-width: 600px;">
+            <div class="panel-header">
+                <h5 class="m-0 fw-bold">Register New Staff Member</h5>
+                <button class="border-0 bg-transparent" onclick="closeModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="staff_proc.php" method="POST">
+                <div class="panel-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Full Name</label>
+                            <input type="text" name="name" class="form-input" placeholder="Enter name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Email Address</label>
+                            <input type="email" name="email" class="form-input" placeholder="staff@example.com" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Role</label>
+                            <select name="role" class="form-input" required>
+                                <option value="stylist">Stylist</option>
+                                <option value="receptionist">Receptionist</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Phone Number</label>
+                            <input type="text" name="phone" class="form-input" placeholder="Optional">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Commission Rate (%)</label>
+                            <input type="number" step="0.01" name="commission_rate" class="form-input" value="10.00">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small fw-bold mb-1">Initial Password</label>
+                            <input type="password" name="password" class="form-input" required>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="small fw-bold mb-1">Initial Work Schedule</label>
+                            <textarea name="work_schedule" class="form-input" rows="2" placeholder="e.g. Mon-Fri: 9AM - 6PM"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-header border-top justify-content-end gap-2">
+                    <button type="button" class="btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" name="add_staff" class="btn-gold">Create Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
         function openModal(id) { 

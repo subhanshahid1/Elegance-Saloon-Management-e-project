@@ -149,6 +149,7 @@ if($user_role === 'admin') {
         </div>
     </div>
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/dashboard.js"></script>
     <script>
         document.querySelectorAll('.nav-link').forEach(btn => {
             btn.addEventListener('click', function() {
