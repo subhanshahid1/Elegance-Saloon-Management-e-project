@@ -1,17 +1,31 @@
 <?php
 require_once 'includes/db.php';
+
 $date = $_GET['date'] ?? '';
 $stylist_id = $_GET['stylist_id'] ?? '';
+$exclude_id = isset($_GET['exclude_id']) ? intval($_GET['exclude_id']) : 0;
 $booked = [];
 
 if(!empty($date)) {
+    // 1. Get total count of active stylists dynamically
+    $stylist_count_res = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'stylist' AND status = 'active'");
+    $total_available_stylists = $stylist_count_res->fetch_assoc()['total'];
+
     if(!empty($stylist_id)) {
-        // Check specific stylist
-        $query = "SELECT apt_time FROM appointments WHERE apt_date = '$date' AND stylist_id = '$stylist_id' AND status != 'cancelled'";
+        // If a specific stylist is picked, check ONLY their schedule
+        $query = "SELECT apt_time FROM appointments 
+                  WHERE apt_date = '$date' 
+                  AND stylist_id = '$stylist_id' 
+                  AND status != 'cancelled' 
+                  AND id != $exclude_id";
     } else {
-        // If "Any" is picked, we only hide the slot if ALL stylists are busy.
-        // Assuming you have 3 stylists total. Change '3' to your actual count.
-        $query = "SELECT apt_time FROM appointments WHERE apt_date = '$date' AND status != 'cancelled' GROUP BY apt_time HAVING count(*) >= 3";
+        // "No Preference": Hide slot only if ALL stylists are busy at this specific time
+        $query = "SELECT apt_time FROM appointments 
+                  WHERE apt_date = '$date' 
+                  AND status != 'cancelled' 
+                  AND id != $exclude_id 
+                  GROUP BY apt_time 
+                  HAVING COUNT(*) >= $total_available_stylists";
     }
     
     $res = $conn->query($query);

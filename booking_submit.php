@@ -3,7 +3,7 @@ error_reporting(0);
 ini_set('display_errors', 0);
 header('Content-Type: application/json');
 require_once 'includes/db.php';
-require_once 'includes/auth.php'; // Required to use notifyUser()
+require_once 'includes/auth.php'; 
 
 $response = ['success' => false, 'message' => 'Unknown error'];
 
@@ -23,44 +23,40 @@ try {
         throw new Exception('Please select a service, date, and time.');
     }
 
-    // Double-check availability
-    $check = $conn->prepare("SELECT id FROM appointments WHERE apt_date = ? AND apt_time = ? AND status != 'cancelled'");
-    $check->bind_param("ss", $apt_date, $apt_time);
-    $check->execute();
-    if ($check->get_result()->num_rows > 0) {
-        throw new Exception('Sorry, this slot was just taken. Please pick another time.');
+    // --- AVAILABILITY LOGIC IMPROVEMENT ---
+    if ($stylist_id) {
+        // Check if specific stylist is free
+        $check = $conn->prepare("SELECT id FROM appointments WHERE apt_date = ? AND apt_time = ? AND stylist_id = ? AND status != 'cancelled'");
+        $check->bind_param("ssi", $apt_date, $apt_time, $stylist_id);
+        $check->execute();
+        if ($check->get_result()->num_rows > 0) {
+            throw new Exception('This specialist is no longer available at this time.');
+        }
+    } else {
+        // Check if ANY stylist is free (Total Stylists vs Total Bookings)
+        $s_res = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'stylist' AND status = 'active'");
+        $total_stylists = $s_res->fetch_assoc()['total'];
+
+        $a_res = $conn->prepare("SELECT COUNT(*) as booked FROM appointments WHERE apt_date = ? AND apt_time = ? AND status != 'cancelled'");
+        $a_res->bind_param("ss", $apt_date, $apt_time);
+        $a_res->execute();
+        if ($a_res->get_result()->fetch_assoc()['booked'] >= $total_stylists) {
+            throw new Exception('All our stylists are fully booked for this time slot.');
+        }
     }
 
     $stmt = $conn->prepare("INSERT INTO appointments (client_id, stylist_id, service_id, apt_date, apt_time, status, notes) VALUES (?, ?, ?, ?, ?, 'pending', ?)");
     $stmt->bind_param("iiisss", $client_id, $stylist_id, $service_id, $apt_date, $apt_time, $notes);
     
     if ($stmt->execute()) {
-        
-        // --- NOTIFICATION LOGIC START ---
         $formatted_time = date('h:i A', strtotime($apt_time));
-        
-        // 1. Notify Admin (Assuming Admin User ID is 1)
-        $admin_msg = "New booking from client ID #$client_id for $apt_date at $formatted_time.";
-        notifyUser($conn, 1, "New Booking Request", $admin_msg, "appointment", "appointments.php");
-
-        // 2. Notify the Stylist (if assigned)
-        if ($stylist_id) {
-            $stylist_msg = "You have a new appointment assigned for $apt_date at $formatted_time.";
-            notifyUser($conn, $stylist_id, "New Appointment", $stylist_msg, "appointment", "appointments.php");
-        }
-
-        // 3. Notify the Client (Self)
-        notifyUser($conn, $client_id, "Booking Received", "Your request for $apt_date at $formatted_time is pending approval.", "appointment", "index.php");
-        // --- NOTIFICATION LOGIC END ---
+        notifyUser($conn, 1, "New Booking Request", "New booking from client ID #$client_id for $apt_date at $formatted_time.", "appointment", "appointments.php");
+        if ($stylist_id) notifyUser($conn, $stylist_id, "New Appointment", "New appointment for $apt_date at $formatted_time.", "appointment", "appointments.php");
+        notifyUser($conn, $client_id, "Booking Received", "Request for $apt_date at $formatted_time is pending.", "appointment", "index.php");
         
         $response = ['success' => true, 'message' => 'Appointment booked successfully!'];
-    } else {
-        throw new Exception('Database error: ' . $conn->error);
     }
-
 } catch (Exception $e) {
     $response = ['success' => false, 'message' => $e->getMessage()];
 }
-
 echo json_encode($response);
-exit;

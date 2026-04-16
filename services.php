@@ -80,6 +80,23 @@ if ($cat_result) {
             color: var(--primary-gold);
         }
 
+        .book-btn {
+            color: var(--primary-gold);
+            font-weight: bold;
+            font-size: 12px;
+            text-transform: uppercase;
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: 0.3s;
+            border: 1px solid var(--primary-gold);
+            padding: 8px 15px;
+            border-radius: 4px;
+        }
+
+        .book-btn:hover {
+            color: #000;
+            background-color: var(--primary-gold);
+        }
 
         /* Sticky Filter Bar */
         .services-nav {
@@ -255,8 +272,11 @@ if ($cat_result) {
                                 <div class="service-card-name"><?php echo htmlspecialchars($service['name']); ?></div>
                                 <p class="service-card-detail"><?php echo htmlspecialchars($service['description']); ?></p>
                                 <div class="service-footer">
-                                    <span class="service-price">Rs. <?php echo number_format($service['price']); ?></span>
-                                    <span class="service-duration"><?php echo $service['duration']; ?> MINS</span>
+                                    <div class="d-flex flex-column">
+                                        <span class="service-price">Rs. <?php echo number_format($service['price']); ?></span>
+                                        <span class="service-duration"><?php echo $service['duration']; ?> MINS</span>
+                                    </div>
+                                    <a href="booking.php?service_id=<?php echo $service['id']; ?>" class="book-btn">Book Now</a>
                                 </div>
                             </div>
                         </div>
