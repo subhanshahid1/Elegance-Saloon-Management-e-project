@@ -103,7 +103,6 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
             transition: all 0.3s ease;
         }
 
-        /* Fix: Prevents white background on click/focus/autofill */
         .form-control:focus,
         .form-select:focus {
             background-color: #111 !important;
@@ -113,7 +112,6 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
             outline: none;
         }
 
-        /* Fix: Notes Placeholder visibility */
         .form-control::placeholder {
             color: #555 !important;
             opacity: 1;
@@ -158,7 +156,6 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
             color: #000;
         }
 
-        /* INFO BLOCKS */
         .info-block {
             margin-bottom: 2.5rem;
         }
@@ -256,7 +253,9 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
                                         <option value="">Choose Date First</option>
                                         <?php
                                         $slots = ["10:00:00", "11:00:00", "12:00:00", "13:00:00", "14:00:00", "15:00:00", "16:00:00", "17:00:00"];
-                                        foreach ($slots as $slot) echo "<option value='$slot'>" . date('h:i A', strtotime($slot)) . "</option>";
+                                        foreach ($slots as $slot) {
+                                            echo "<option value='$slot'>" . date('h:i A', strtotime($slot)) . "</option>";
+                                        }
                                         ?>
                                     </select>
                                 </div>
@@ -312,9 +311,20 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
 
     <?php include('includes/footer.php'); ?>
 
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
     <script>
         // Set minimum booking date to Today
         document.getElementById('appt_date').setAttribute('min', new Date().toISOString().split('T')[0]);
+
+        // Helper function to format 24h string to 12h AM/PM
+        function formatAMPM(timeString) {
+            let [hours, minutes] = timeString.split(':');
+            let ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12;
+            hours = hours ? hours : 12; // the hour '0' should be '12'
+            return hours + ':' + minutes + ' ' + ampm;
+        }
 
         // REQ: Availability logic (Stylist + Date)
         function checkSlots() {
@@ -330,15 +340,18 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
                     Array.from(timeSelect.options).forEach(opt => {
                         if (opt.value === "") return;
 
+                        // Get the nice formatted 12h time
+                        const niceTime = formatAMPM(opt.value);
+
                         // If slot is in the 'booked' array returned from server
                         if (data.booked.includes(opt.value)) {
                             opt.disabled = true;
                             opt.style.color = '#444';
-                            opt.text = opt.value.substring(0, 5) + " (Unavailable)";
+                            opt.text = niceTime + " (Unavailable)";
                         } else {
                             opt.disabled = false;
                             opt.style.color = '#fff';
-                            opt.text = opt.value.substring(0, 5);
+                            opt.text = niceTime;
                         }
                     });
                 });
