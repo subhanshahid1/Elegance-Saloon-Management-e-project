@@ -71,7 +71,7 @@ $stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND 
     <div class="container">
         <div class="res-container">
             <h2 class="mb-2" style="font-family: var(--font-primary); color: var(--primary-gold);">RESCHEDULE <em>EXPERIENCE</em></h2>
-            <p class="text-muted small mb-4">Update your preferred specialist, date, or time below.</p>
+            <p class="small mb-4">Update your preferred specialist, date, or time below.</p>
             
             <form id="resForm">
                 <input type="hidden" name="apt_id" value="<?= $apt_id ?>">
@@ -110,7 +110,7 @@ $stylists = $conn->query("SELECT id, name FROM users WHERE role = 'stylist' AND 
                 </div>
 
                 <button type="submit" id="submitBtn" class="btn-gold">Update Appointment</button>
-                <a href="appointment_history.php" class="d-block text-center mt-4 small text-decoration-none text-muted">
+                <a href="appointment_history.php" class="d-block text-center mt-4 small text-decoration-none text-gold">
                     <i class="fa-solid fa-arrow-left me-1"></i> Cancel & Go Back
                 </a>
             </form>

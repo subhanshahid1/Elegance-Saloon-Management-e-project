@@ -1,11 +1,14 @@
-<?php 
-require_once 'includes/db.php'; 
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
+<?php
+require_once 'includes/db.php';
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $client_id = $_SESSION['user_id'];
 
 // Handling Cancellation request
-if(isset($_GET['cancel_id'])) {
+if (isset($_GET['cancel_id'])) {
     $c_id = intval($_GET['cancel_id']);
     $conn->query("UPDATE appointments SET status = 'cancelled' WHERE id = $c_id AND client_id = $client_id");
     header("Location: appointment_history.php?msg=cancelled");
@@ -22,6 +25,7 @@ $res = mysqli_query($conn, $query);
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,95 +34,222 @@ $res = mysqli_query($conn, $query);
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Keeping your original styles exactly */
-        html, body { max-width: 100%; overflow-x: hidden; }
-        .page-hero { background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600') center/cover no-repeat; padding: 90px 0 70px; text-align: center; }
-        .page-hero h1 { font-family: var(--font-primary); font-size: clamp(2.2rem, 6vw, 3.8rem); color: var(--primary-gold); text-transform: uppercase; letter-spacing: 6px; }
-        .history-section { padding: 80px 0; background: var(--bg-black); min-height: 80vh; }
-        .table-custom { color: #fff; width: 100%; font-size: 14px; border-collapse: separate; border-spacing: 0 10px; }
-        .table-custom td { padding: 20px 15px; background: var(--bg-card); border-top: 1px solid #333; border-bottom: 1px solid #333; vertical-align: middle; }
-        .status-badge { font-size: 10px; text-transform: uppercase; padding: 4px 10px; border-radius: 3px; border: 1px solid; font-weight: bold; }
-        .status-pending { color: #ffc107; border-color: #ffc107; }
-        .status-confirmed { color: #28a745; border-color: #28a745; }
-        .status-cancelled { color: #dc3545; border-color: #dc3545; }
-        .btn-gold-sm { background: var(--primary-gold); color: #000; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; transition: 0.3s; }
-        .btn-gold-sm:hover { background: #fff; transform: translateY(-2px); }
-        .text-cancel { color: #dc3545; font-size: 11px; text-transform: uppercase; text-decoration: none; font-weight: bold; }
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+            background: #000;
+            color: #fff;
+        }
+
+        .page-hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600') center/cover no-repeat;
+            padding: 90px 0 70px;
+            text-align: center;
+        }
+
+        .page-hero h1 {
+            font-family: var(--font-primary);
+            font-size: clamp(2.2rem, 6vw, 3.8rem);
+            color: var(--primary-gold);
+            text-transform: uppercase;
+            letter-spacing: 6px;
+        }
+
+        .history-section {
+            padding: 80px 0;
+            background: #000;
+            min-height: 80vh;
+        }
+
+        /* Table Customization */
+        .table-custom {
+            color: #fff;
+            width: 100%;
+            font-size: 14px;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            min-width: 600px;
+            /* Ensures readable layout on small scroll */
+        }
+
+        .table-custom td {
+            padding: 20px 15px;
+            background: #111;
+            border-top: 1px solid #222;
+            border-bottom: 1px solid #222;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .table-custom th {
+            border: none !important;
+        }
+
+        .status-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 3px;
+            border: 1px solid;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-pending {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .status-confirmed {
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .status-cancelled {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .status-completed {
+            color: #0dcaf0;
+            border-color: #0dcaf0;
+        }
+
+        .btn-gold-sm {
+            background: var(--primary-gold);
+            color: #000;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 2px;
+            display: inline-block;
+            transition: 0.3s;
+            border: none;
+        }
+
+        .btn-gold-sm:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            color: #000;
+        }
+
+        .text-cancel {
+            color: #dc3545;
+            font-size: 11px;
+            text-transform: uppercase;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .text-cancel:hover {
+            color: #fff;
+        }
+
+        /* Responsive Fix for the divider */
+        @media (max-width: 768px) {
+            .divider-col {
+                border-left: none !important;
+                border-top: 1px solid #222;
+                padding-top: 40px;
+                margin-top: 40px;
+            }
+
+            .pe-md-5 {
+                padding-right: 0 !important;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<?php include('includes/header.php'); ?>
+    <?php include('includes/header.php'); ?>
 
-<section class="page-hero">
-    <h1>Account</h1>
-    <div class="breadcrumb-row">
-        <a href="index.php">Home</a> <span>›</span> <span>Appointments</span>
-    </div>
-</section>
+    <section class="page-hero">
+        <h1>Account</h1>
+        <div class="breadcrumb-row d-flex justify-content-center gap-2 text-uppercase" style="font-size:11px; letter-spacing: 1.5px;">
+            <a href="index.php" class="text-decoration-none" style="color:#666;">Home</a>
+            <span style="color:#444;">›</span>
+            <span style="color:var(--primary-gold);">Appointments</span>
+        </div>
+    </section>
 
-<section class="history-section">
-    <div class="container">
-        <div class="row g-0">
-            <div class="col-12 col-md-8 pe-md-5">
-                <h2 class="col-heading">Appointment <em>History</em></h2>
-                <?php if(isset($_GET['msg'])) echo "<p class='text-success small'>Action processed successfully.</p>"; ?>
-                
-                <div class="table-responsive-custom">
-                    <table class="table-custom">
-                        <thead>
-                            <tr style="color:var(--primary-gold); font-size:11px; text-transform:uppercase;">
-                                <th class="pb-3">Schedule</th>
-                                <th class="pb-3">Treatment</th>
-                                <th class="pb-3">Status</th>
-                                <th class="pb-3 text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(mysqli_num_rows($res) > 0): ?>
-                                <?php while($row = mysqli_fetch_assoc($res)): ?>
-                                <tr>
-                                    <td>
-                                        <div style="font-weight: 600; color: #fff;"><?php echo date('D, M d', strtotime($row['apt_date'])); ?></div>
-                                        <small class=""><?php echo date('h:i A', strtotime($row['apt_time'])); ?></small>
-                                    </td>
-                                    <td><?php echo $row['service_name']; ?></td>
-                                    <td>
-                                        <span class="status-badge status-<?php echo $row['status']; ?>"><?php echo $row['status']; ?></span>
-                                    </td>
-                                    <td class="text-end">
-                                        <?php if($row['status'] != 'cancelled'): ?>
-                                            <a href="reschedule.php?id=<?php echo $row['id']; ?>" class="btn-gold-sm me-2">Reschedule</a>
-                                            <a href="appointment_history.php?cancel_id=<?php echo $row['id']; ?>" class="text-cancel" onclick="return confirm('Cancel this appointment?')">Cancel</a>
-                                        <?php endif; ?>
-                                    </td>
+    <section class="history-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-md-8 pe-md-5">
+                    <h2 class="col-heading">Appointment <em>History</em></h2>
+                    <?php if (isset($_GET['msg'])) echo "<p class='text-success small'>Action processed successfully.</p>"; ?>
+
+                    <div class="table-responsive">
+                        <table class="table-custom">
+                            <thead>
+                                <tr style="color:var(--primary-gold); font-size:11px; text-transform:uppercase;">
+                                    <th class="pb-3">Schedule</th>
+                                    <th class="pb-3">Treatment</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-end">Action</th>
                                 </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr><td colspan="4" class="text-center py-5 text-muted">No appointments found.</td></tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php if (mysqli_num_rows($res) > 0): ?>
+                                    <?php while ($row = mysqli_fetch_assoc($res)): ?>
+                                        <tr>
+                                            <td>
+                                                <div style="font-weight: 600; color: #fff;"><?php echo date('D, M d', strtotime($row['apt_date'])); ?></div>
+                                                <small style="color:#888;"><?php echo date('h:i A', strtotime($row['apt_time'])); ?></small>
+                                            </td>
+                                            <td>
+                                                <div style="color:#fff;"><?php echo $row['service_name']; ?></div>
+                                                <small style="color:var(--primary-gold);">Rs. <?php echo number_format($row['price']); ?></small>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge status-<?php echo $row['status']; ?>"><?php echo $row['status']; ?></span>
+                                            </td>
+                                            <td class="text-end">
+                                                <?php if ($row['status'] != 'cancelled' && $row['status'] != 'completed'): ?>
+                                                    <a href="reschedule.php?id=<?php echo $row['id']; ?>" class="btn-gold-sm">Reschedule</a>
+                                                    <a href="appointment_history.php?cancel_id=<?php echo $row['id']; ?>" class="text-cancel" onclick="return confirm('Cancel this appointment?')">Cancel</a>
+                                                <?php else: ?>
+                                                    <span style="color:#444; font-size:11px; text-transform:uppercase;">No actions</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endwhile; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="4" class="text-center py-5 text-muted">No appointments found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-md-4 ps-md-5 info-col divider-col">
-                <h2 class="col-heading">Dashboard <em>Info</em></h2>
-                <div class="info-block mt-4">
-                    <div class="info-block-title">Status Guide</div>
-                    <p><i class="fa-solid fa-clock info-icon" style="color:#ffc107;"></i> <strong>Pending:</strong> Staff is reviewing your request.</p>
-                    <p><i class="fa-solid fa-check-circle info-icon" style="color:#28a745;"></i> <strong>Confirmed:</strong> Your slot is locked in!</p>
-                </div>
-                <div class="info-block">
-                    <div class="info-block-title">Profile</div>
-                    <p>User: <strong><?php echo $_SESSION['user_name']; ?></strong></p>
-                    <a href="logout.php" style="color:var(--primary-gold); font-size:12px; text-decoration:none;">LOGOUT</a>
+                <div class="col-12 col-md-4 ps-md-5 info-col divider-col" style="border-left: 1px solid #222;">
+                    <h2 class="col-heading" style="font-size:1.5rem;">Dashboard <em>Info</em></h2>
+                    <div class="info-block mt-4 mb-4">
+                        <div class="info-block-title" style="color:var(--primary-gold); font-size:12px; letter-spacing:2px; font-weight:800; margin-bottom:15px;">STATUS GUIDE</div>
+                        <p style="font-size:13px; color:#888;"><i class="fa-solid fa-clock me-2" style="color:#ffc107;"></i> <strong>Pending:</strong> Staff is reviewing your request.</p>
+                        <p style="font-size:13px; color:#888;"><i class="fa-solid fa-check-circle me-2" style="color:#28a745;"></i> <strong>Confirmed:</strong> Your slot is locked in!</p>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-block-title" style="color:var(--primary-gold); font-size:12px; letter-spacing:2px; font-weight:800; margin-bottom:15px;">PROFILE</div>
+                        <p style="font-size:13px; color:#888;">Logged in as: <strong style="color:#fff;"><?php echo $_SESSION['user_name']; ?></strong></p>
+                        <a href="logout.php" class="btn-outline-gold" style="padding: 8px 15px; font-size: 10px; border: 1px solid var(--primary-gold); color: var(--primary-gold); text-decoration: none; display: inline-block;">LOGOUT</a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<?php include('includes/footer.php'); ?>
+    <?php include('includes/footer.php'); ?>
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/script.js"></script>
 </body>
+
 </html>
