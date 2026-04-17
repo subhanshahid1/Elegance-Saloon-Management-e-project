@@ -41,7 +41,7 @@ if ($cat_result) {
         /* Page Hero Banner (Matched with About Us) */
         .page-hero {
             background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
-                url('https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600') center/cover no-repeat;
+                url('assets/images/carousel1.png') center/cover no-repeat;
             padding: 90px 0 70px;
             text-align: center;
         }

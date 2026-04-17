@@ -599,9 +599,9 @@
         </div>
 
         <div class="carousel-track" id="track">
-            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=1600')"></div>
-            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?q=80&w=1600')"></div>
-            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=1600')"></div>
+            <div class="slide" style="background-image: url('assets/images/carousel.png')"></div>
+            <div class="slide" style="background-image: url('assets/images/carousel1.png')"></div>
+            <div class="slide" style="background-image: url('assets/images/carousel2.png')"></div>
         </div>
     </section>
 
@@ -643,13 +643,13 @@
 
         <div class="image-container">
             <div class="img-wrapper img-main">
-                <img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=800&q=80" alt="Main Salon">
+                <img src="assets/images/home1.png" alt="Main Salon">
             </div>
             <div class="img-wrapper img-left">
-                <img src="https://images.unsplash.com/photo-1595476108010-b4d1f102b1b1?auto=format&fit=crop&w=600&q=80" alt="Styling">
+                <img src="assets/images/home2.png" alt="Styling">
             </div>
             <div class="img-wrapper img-right">
-                <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?auto=format&fit=crop&w=400&q=80" alt="Facial">
+                <img src="assets/images/home3.png" alt="Facial">
             </div>
         </div>
     </section>
@@ -663,7 +663,7 @@
 
                 <div class="circle-item">
                     <div class="circle-frame">
-                        <img src="https://images.unsplash.com/photo-1562322140-8baeececf3df?q=80&w=400" alt="Hair Cut">
+                        <img src="assets/images/home1.png" alt="Hair Cut">
                     </div>
                     <p>Hair Cut</p>
                 </div>
@@ -677,14 +677,14 @@
 
                 <div class="circle-item">
                     <div class="circle-frame">
-                        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874?q=80&w=400" alt="Massage">
+                        <img src="assets/images/home4.png" alt="Massage">
                     </div>
                     <p>Massage</p>
                 </div>
 
                 <div class="circle-item">
                     <div class="circle-frame">
-                        <img src="https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=400" alt="Facial">
+                        <img src="assets/images/home3.png" alt="Facial">
                     </div>
                     <p>Facials</p>
                 </div>
