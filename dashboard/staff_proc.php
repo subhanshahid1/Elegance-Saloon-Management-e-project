@@ -6,27 +6,42 @@ checkAccess(['admin', 'receptionist']);
 $current_role = getUserRole();
 
 if (isset($_POST['add_staff'])) {
-    if($current_role !== 'admin') { header("Location: staff.php?err=unauthorized"); exit(); }
+    if ($current_role !== 'admin') {
+        header("Location: staff.php?err=unauthorized");
+        exit();
+    }
+
     $name = $conn->real_escape_string($_POST['name']);
     $email = $conn->real_escape_string($_POST['email']);
     $role = $conn->real_escape_string($_POST['role']);
+    $phone = $conn->real_escape_string($_POST['phone']); // Add this
     $comm = (float)$_POST['commission_rate'];
     $pass = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $sched = $conn->real_escape_string($_POST['work_schedule']);
 
     $check = $conn->query("SELECT id FROM users WHERE email = '$email'");
-    if($check->num_rows > 0) { header("Location: staff.php?msg=email_exists"); exit(); }
+    if ($check->num_rows > 0) {
+        header("Location: staff.php?msg=email_exists");
+        exit();
+    }
 
-    $sql = "INSERT INTO users (name, email, password, role, commission_rate, work_schedule, status) 
-            VALUES ('$name', '$email', '$pass', '$role', $comm, '$sched', 'active')";
-    if($conn->query($sql)) { header("Location: staff.php?msg=added"); }
+    // Removed 'status' to avoid errors if column doesn't exist, added 'phone'
+    $sql = "INSERT INTO users (name, email, phone, password, role, commission_rate, work_schedule) 
+            VALUES ('$name', '$email', '$phone', '$pass', '$role', $comm, '$sched')";
+
+    if ($conn->query($sql)) {
+        header("Location: staff.php?msg=added");
+    } else {
+        // This will help you see the exact error if it fails again
+        die("Error: " . $conn->error);
+    }
     exit();
 }
 
 if (isset($_POST['update_staff'])) {
     $id = (int)$_POST['staff_id'];
     $sched = $conn->real_escape_string($_POST['work_schedule']);
-    
+
     // If Receptionist, they ONLY update the schedule. 
     // If Admin, they can update everything.
     if ($current_role === 'receptionist') {
@@ -36,19 +51,19 @@ if (isset($_POST['update_staff'])) {
         $email = $conn->real_escape_string($_POST['email']);
         $query = "UPDATE users SET name='$name', email='$email', work_schedule='$sched'";
 
-        if(isset($_POST['commission_rate'])) {
+        if (isset($_POST['commission_rate'])) {
             $comm = (float)$_POST['commission_rate'];
             $query .= ", commission_rate=$comm";
         }
-        if(!empty($_POST['password'])) {
+        if (!empty($_POST['password'])) {
             $pass = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $query .= ", password='$pass'";
         }
         $query .= " WHERE id=$id";
     }
 
-    if($conn->query($query)) { 
-        header("Location: staff.php?msg=updated"); 
+    if ($conn->query($query)) {
+        header("Location: staff.php?msg=updated");
     } else {
         header("Location: staff.php?msg=error");
     }

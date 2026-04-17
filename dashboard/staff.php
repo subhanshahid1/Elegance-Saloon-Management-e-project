@@ -19,6 +19,7 @@ $totalStaff = $countRes->fetch_assoc()['total'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,11 +28,28 @@ $totalStaff = $countRes->fetch_assoc()['total'];
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="../assets/css/dashboard.css">
     <style>
-        .comm-card { background: #fcf9f0; border: 1px solid #e9dfc4; border-radius: 10px; }
-        .schedule-box { font-size: 0.85rem; color: #555; background: #f8f9fa; padding: 10px; border-radius: 5px; }
-        input[readonly], textarea[readonly] { background-color: #e9ecef !important; cursor: not-allowed; }
+        .comm-card {
+            background: #fcf9f0;
+            border: 1px solid #e9dfc4;
+            border-radius: 10px;
+        }
+
+        .schedule-box {
+            font-size: 0.85rem;
+            color: #555;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        input[readonly],
+        textarea[readonly] {
+            background-color: #e9ecef !important;
+            cursor: not-allowed;
+        }
     </style>
 </head>
+
 <body>
     <?php include('../includes/sidebar.php'); ?>
 
@@ -44,7 +62,7 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                     <h2 class="fw-bold m-0">Staff Management</h2>
                     <p class="text-muted">Role: <span class="text-gold fw-bold text-uppercase"><?php echo $current_role; ?></span></p>
                 </div>
-                <?php if($current_role === 'admin'): ?>
+                <?php if ($current_role === 'admin'): ?>
                     <button class="btn-gold" onclick="openModal('addStaffModal')">
                         <i class="bi bi-person-plus-fill me-2"></i>Register New Staff
                     </button>
@@ -61,16 +79,16 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                         </div>
                     </div>
                 </div>
-                
-                <?php if($current_role === 'stylist' || $current_role === 'admin'): ?>
-                <div class="col-md-8">
-                    <div class="panel p-3 comm-card">
-                        <h6 class="fw-bold mb-2"><i class="bi bi-graph-up-arrow me-2"></i>Commission Overview</h6>
-                        <div class="small text-muted">
-                            <?php echo ($current_role === 'stylist') ? "Your earning rate is set by Admin." : "Admins can modify percentage rates for all stylists."; ?>
+
+                <?php if ($current_role === 'stylist' || $current_role === 'admin'): ?>
+                    <div class="col-md-8">
+                        <div class="panel p-3 comm-card">
+                            <h6 class="fw-bold mb-2"><i class="bi bi-graph-up-arrow me-2"></i>Commission Overview</h6>
+                            <div class="small text-muted">
+                                <?php echo ($current_role === 'stylist') ? "Your earning rate is set by Admin." : "Admins can modify percentage rates for all stylists."; ?>
+                            </div>
                         </div>
                     </div>
-                </div>
                 <?php endif; ?>
             </div>
 
@@ -83,43 +101,43 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                                 <th>CONTACT</th>
                                 <th>WORK SCHEDULE</th>
                                 <th>COMMISSION (%)</th>
-                                <?php if($current_role !== 'stylist'): ?><th>ACTIONS</th><?php endif; ?>
+                                <?php if ($current_role !== 'stylist'): ?><th>ACTIONS</th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while($row = $result->fetch_assoc()): ?>
-                            <tr>
-                                <td>
-                                    <div class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></div>
-                                    <span class="badge bg-light text-dark border small text-uppercase"><?php echo $row['role']; ?></span>
-                                </td>
-                                <td>
-                                    <div class="small"><i class="bi bi-envelope me-1"></i><?php echo $row['email']; ?></div>
-                                    <div class="small"><i class="bi bi-telephone me-1"></i><?php echo $row['phone'] ?? 'N/A'; ?></div>
-                                </td>
-                                <td>
-                                    <div class="schedule-box">
-                                        <i class="bi bi-calendar3 me-1"></i> <?php echo !empty($row['work_schedule']) ? htmlspecialchars($row['work_schedule']) : 'No schedule set'; ?>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="fs-5 fw-bold text-gold"><?php echo number_format($row['commission_rate'], 1); ?>%</span>
-                                </td>
-                                <?php if($current_role !== 'stylist'): ?>
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        <button class="btn btn-sm btn-outline-dark" onclick='editStaff(<?php echo json_encode($row); ?>)'>
-                                            <i class="bi bi-pencil-square"></i> <?php echo ($current_role === 'receptionist') ? 'Manage Shift' : 'Edit'; ?>
-                                        </button>
-                                        <?php if($current_role === 'admin'): ?>
-                                            <a href="staff_proc.php?delete_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this staff member?')">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <?php endif; ?>
-                            </tr>
+                            <?php while ($row = $result->fetch_assoc()): ?>
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold"><?php echo htmlspecialchars($row['name']); ?></div>
+                                        <span class="badge bg-light text-dark border small text-uppercase"><?php echo $row['role']; ?></span>
+                                    </td>
+                                    <td>
+                                        <div class="small"><i class="bi bi-envelope me-1"></i><?php echo $row['email']; ?></div>
+                                        <div class="small"><i class="bi bi-telephone me-1"></i><?php echo $row['phone'] ?? 'N/A'; ?></div>
+                                    </td>
+                                    <td>
+                                        <div class="schedule-box">
+                                            <i class="bi bi-calendar3 me-1"></i> <?php echo !empty($row['work_schedule']) ? htmlspecialchars($row['work_schedule']) : 'No schedule set'; ?>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="fs-5 fw-bold text-gold"><?php echo number_format($row['commission_rate'], 1); ?>%</span>
+                                    </td>
+                                    <?php if ($current_role !== 'stylist'): ?>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-dark" onclick='editStaff(<?php echo json_encode($row); ?>)'>
+                                                    <i class="bi bi-pencil-square"></i> <?php echo ($current_role === 'receptionist') ? 'Manage Shift' : 'Edit'; ?>
+                                                </button>
+                                                <?php if ($current_role === 'admin'): ?>
+                                                    <a href="staff_proc.php?delete_id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this staff member?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                    <?php endif; ?>
+                                </tr>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
@@ -150,15 +168,15 @@ $totalStaff = $countRes->fetch_assoc()['total'];
                             <label class="small fw-bold mb-1">Work Schedule (Assign Shifts)</label>
                             <textarea name="work_schedule" id="edit_schedule" class="form-input" rows="2"></textarea>
                         </div>
-                        <?php if($current_role === 'admin'): ?>
-                        <div class="col-md-6">
-                            <label class="small fw-bold mb-1">Commission Rate (%)</label>
-                            <input type="number" step="0.01" name="commission_rate" id="edit_commission" class="form-input">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="small fw-bold mb-1">New Password (Optional)</label>
-                            <input type="password" name="password" class="form-input">
-                        </div>
+                        <?php if ($current_role === 'admin'): ?>
+                            <div class="col-md-6">
+                                <label class="small fw-bold mb-1">Commission Rate (%)</label>
+                                <input type="number" step="0.01" name="commission_rate" id="edit_commission" class="form-input">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold mb-1">New Password (Optional)</label>
+                                <input type="password" name="password" class="form-input">
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -223,23 +241,26 @@ $totalStaff = $countRes->fetch_assoc()['total'];
 
     <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
-        function openModal(id) { 
+        function openModal(id) {
             const modal = document.getElementById(id);
-            if(modal) modal.style.display = 'flex'; 
+            if (modal) modal.style.display = 'flex';
         }
-        function closeModal() { 
-            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); 
+
+        function closeModal() {
+            document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none');
         }
+
         function editStaff(data) {
             document.getElementById('edit_id').value = data.id;
             document.getElementById('edit_name').value = data.name;
             document.getElementById('edit_email').value = data.email;
             document.getElementById('edit_schedule').value = data.work_schedule || '';
             const commField = document.getElementById('edit_commission');
-            if(commField) commField.value = data.commission_rate;
+            if (commField) commField.value = data.commission_rate;
             openModal('editStaffModal');
         }
     </script>
     <script src="../assets/js/dashboard.js"></script>
 </body>
+
 </html>
