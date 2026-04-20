@@ -1,5 +1,8 @@
-
-
+<?php
+// We use the same query logic as your header.php
+$footer_cat_query = "SELECT DISTINCT category FROM services WHERE status = 'active' ORDER BY category ASC LIMIT 5";
+$footer_cat_result = mysqli_query($conn, $footer_cat_query);
+?>
 <footer>
   <div class="footer-top">
 
@@ -16,20 +19,30 @@
 
     <div class="col">
       <h4>Quick Links</h4>
-      <a href="#">Home</a>
-      <a href="#">About Us</a>
-      <a href="#">Our Services</a>
-      <a href="#">Gallery</a>
-      <a href="#">Contact</a>
+      <a href="index.php">Home</a>
+      <a href="aboutus.php">About Us</a>
+      <a href="services.php">Our Services</a>
+      <a href="contact.php">Contact</a>
     </div>
 
     <div class="col">
       <h4>Our Services</h4>
-      <a href="#">Haircut & Styling</a>
-      <a href="#">Shave & Beard Trim</a>
-      <a href="#">Hair Colouring</a>
-      <a href="#">Head Massage</a>
-      <a href="#">Keratin Treatment</a>
+      <?php 
+      if ($footer_cat_result && mysqli_num_rows($footer_cat_result) > 0) {
+          while($row = mysqli_fetch_assoc($footer_cat_result)) {
+              $cat_name = $row['category'];
+              // Same slug logic as header.php to ensure the link works
+              $cat_slug = strtolower(str_replace(' ', '-', $cat_name));
+              ?>
+              <a href="services.php#<?php echo $cat_slug; ?>">
+                  <?php echo htmlspecialchars($cat_name); ?>
+              </a>
+              <?php
+          }
+      } else {
+          echo '<a href="services.php">All Services</a>';
+      }
+      ?>
     </div>
 
     <div class="col">
@@ -43,7 +56,7 @@
   </div>
 
   <div class="footer-bottom">
-    <p>© 2025 <span>Elegance Saloon</span>. All rights reserved.</p>
+    <p>© <?php echo date('Y'); ?> <span>Elegance Saloon</span>. All rights reserved.</p>
     <p>Designed with ♥ for style</p>
   </div>
 </footer>
