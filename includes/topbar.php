@@ -5,7 +5,7 @@ $role = getUserRole();
 $uid = getUserId();
 $notifications = [];
 
-// --- 1. SYSTEM-GENERATED NOTIFICATIONS ---
+// 1. SYSTEM-GENERATED NOTIFICATIONS
 $db_notif = $conn->prepare("SELECT title, message, link, type FROM notifications WHERE user_id = ? AND is_read = 0 ORDER BY created_at DESC LIMIT 5");
 $db_notif->bind_param("i", $uid);
 $db_notif->execute();
@@ -28,7 +28,7 @@ while($row = $db_res->fetch_assoc()) {
     ];
 }
 
-// --- 2. AUTOMATED LOGIC FOR STYLIST ---
+// 2. AUTOMATED LOGIC FOR STYLIST
 if ($role == 'stylist') {
     $sql = "SELECT id, apt_date FROM appointments 
             WHERE stylist_id = ? AND status = 'pending' 
@@ -48,7 +48,7 @@ if ($role == 'stylist') {
     }
 }
 
-// --- 3. LOGIC FOR RECEPTIONIST & ADMIN ---
+// 3. LOGIC FOR RECEPTIONIST & ADMIN
 if (in_array($role, ['admin', 'receptionist'])) {
     $stock_check = $conn->query("SELECT name FROM inventory WHERE quantity <= 5");
     if ($stock_check) {
@@ -77,7 +77,7 @@ if (in_array($role, ['admin', 'receptionist'])) {
     }
 }
 
-// --- 4. ADMIN ONLY (Feedback Alert) ---
+// 4. ADMIN ONLY (Feedback Alert)
 if ($role == 'admin') {
     // Only shows if a new feedback was received in the last 24 hours
     $fb_check = $conn->query("SELECT name FROM feedbacks WHERE created_at >= NOW() - INTERVAL 1 DAY ORDER BY created_at DESC LIMIT 1");
