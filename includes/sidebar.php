@@ -55,6 +55,11 @@
             <i class="bi bi-credit-card"></i>
             <span>Payments</span>
         </a>
+
+        <a href="messages.php" class="nav-link-custom <?php echo (basename($_SERVER['PHP_SELF']) == 'messages.php') ? 'active' : ''; ?>">
+            <i class="bi bi-people"></i>
+            <span>Messages</span>
+        </a>
     <?php endif; ?>
 
     <?php if (getUserRole() === 'admin'): ?>
