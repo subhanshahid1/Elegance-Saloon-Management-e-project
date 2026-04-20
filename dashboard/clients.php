@@ -244,6 +244,7 @@ while ($s = $stylists->fetch_assoc()) {
         </div>
     </div>
 
+    <script src="../assets/js/bootstrap.bundle.min.js"></script>
     <script>
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
