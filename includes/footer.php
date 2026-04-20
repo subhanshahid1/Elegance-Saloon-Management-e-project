@@ -1,5 +1,4 @@
 <?php
-// We use the same query logic as your header.php
 $footer_cat_query = "SELECT DISTINCT category FROM services WHERE status = 'active' ORDER BY category ASC LIMIT 5";
 $footer_cat_result = mysqli_query($conn, $footer_cat_query);
 ?>
