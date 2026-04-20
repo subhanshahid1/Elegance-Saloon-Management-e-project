@@ -1,7 +1,5 @@
-// ===== TOPBAR DATE =====
-/**
- * Updates the date display in the topbar to the current date
- */
+// TOPBAR DATE 
+// This Updates the date display in the topbar to the current date 
 function updateTopbarDate() {
     const dateEl = document.getElementById('topbar-date');
     if (dateEl) {
@@ -11,10 +9,8 @@ function updateTopbarDate() {
     }
 }
 
-// ===== MOBILE SIDEBAR TOGGLE =====
-/**
- * Handles the opening/closing of sidebar on mobile devices
- */
+// MOBILE SIDEBAR TOGGLE
+// This Handles the opening/closing of sidebar on mobile devices 
 function initMobileSidebar() {
     const toggleBtn = document.getElementById('sidebar-toggle');
     const sidebar = document.querySelector('.sidebar');
@@ -50,10 +46,10 @@ function initMobileSidebar() {
     }
 }
 
-// ===== PAGE NAVIGATION =====
-/**
- * Sets the active state on sidebar links based on the current URL
- */
+// PAGE NAVIGATION
+
+// Sets the active state on sidebar links based on the current URL
+ 
 function handleSidebarActiveState() {
     const currentPath = window.location.pathname;
     const navLinks = document.querySelectorAll('.nav-link-custom');
@@ -68,10 +64,10 @@ function handleSidebarActiveState() {
     });
 }
 
-// ===== MODAL LOGIC =====
-/**
- * Opens a modal by ID
- */
+// MODAL LOGIC
+
+// Opens a modal by ID
+ 
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -80,9 +76,9 @@ function openModal(modalId) {
     }
 }
 
-/**
- * Closes all open modals
- */
+
+// Closes all open modals
+ 
 function closeModal() {
     const modals = document.querySelectorAll('.modal-overlay');
     modals.forEach(modal => {
@@ -105,10 +101,10 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// ===== TAB PILLS =====
-/**
- * Switches active state for tab pills
- */
+// TAB PILLS
+
+// Switches active state for tab pills
+ 
 function activateTab(el) {
     const group = el.closest('.tab-pills');
     if (group) {
@@ -117,10 +113,10 @@ function activateTab(el) {
     el.classList.add('active');
 }
 
-// ===== TOGGLE SWITCHES =====
-/**
- * Initializes toggle switch click events
- */
+// TOGGLE SWITCHES
+
+// Initializes toggle switch click events
+ 
 function initToggles() {
     document.querySelectorAll('.toggle').forEach(toggle => {
         toggle.addEventListener('click', function() {
@@ -129,10 +125,9 @@ function initToggles() {
     });
 }
 
-// ===== STAR RATING =====
-/**
- * Star rating hover and click logic
- */
+// STAR RATING 
+// Star rating hover and click logic
+
 function initStarRating() {
     const starsEl = document.getElementById('stars');
     if (starsEl) {
@@ -156,7 +151,7 @@ function initStarRating() {
     }
 }
 
-// ===== INITIALIZATION =====
+// INITIALIZATION
 document.addEventListener('DOMContentLoaded', function() {
     updateTopbarDate();
     handleSidebarActiveState();
