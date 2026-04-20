@@ -1,9 +1,9 @@
 <?php
 
-/* ===== INCLUDE CONFIG ===== */
+/* INCLUDE CONFIG */
 require_once 'config/config.php';
 
-/* ===== DESTROY SESSION ===== */
+/* DESTROY SESSION */
 
 // Step 1 Start the session so we can access it
 session_start();

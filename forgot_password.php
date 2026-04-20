@@ -101,23 +101,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
 
-    <!-- ===== META & TITLE ===== -->
+    <!-- META & TITLE -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password | <?php echo SITE_NAME; ?></title>
 
-    <!-- ===== BOOTSTRAP 5 ===== -->
+    <!-- BOOTSTRAP 5 -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- ===== BOOTSTRAP ICONS ===== -->
+    <!-- BOOTSTRAP ICONS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- ===== GOOGLE FONTS ===== -->
+    <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
 
     <style>
 
-        /* ===== ROOT VARIABLES ===== */
+        /* ROOT VARIABLES */
         :root {
             --gold:         #C9A84C;
             --gold-dark:    #8B6914;
@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             --font-body:    'DM Sans', sans-serif;
         }
 
-        /* ===== BASE ===== */
+        /* BASE */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
@@ -141,10 +141,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 30px 16px;
         }
 
-        /* ===== WRAPPER ===== */
+        /* WRAPPER */
         .wrapper { width: 100%; max-width: 420px; }
 
-        /* ===== BRAND ===== */
+        /* BRAND */
         .brand-header { text-align: center; margin-bottom: 32px; }
         .brand-name {
             font-family: var(--font-display);
@@ -165,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-transform: uppercase;
         }
 
-        /* ===== CARD ===== */
+        /* CARD */
         .card-box {
             background: white;
             border-radius: 18px;
@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             line-height: 1.6;
         }
 
-        /* ===== FORM ===== */
+        /* FORM */
         .form-label-sm {
             font-size: 11px;
             font-weight: 500;
@@ -221,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-size: 15px;
         }
 
-        /* ===== BUTTON ===== */
+        /* BUTTON */
         .btn-gold {
             width: 100%;
             padding: 12px;
@@ -242,7 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .btn-gold:hover { background: var(--gold-dark); }
 
-        /* ===== ALERTS ===== */
+        /* ALERTS */
         .alert-custom {
             padding: 11px 14px;
             border-radius: 9px;
@@ -263,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #1E8449;
         }
 
-        /* ===== BOTTOM LINKS ===== */
+        /* BOTTOM LINKS */
         .bottom-link {
             text-align: center;
             margin-top: 20px;
@@ -283,14 +283,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="wrapper">
 
-        <!-- ===== BRAND HEADER ===== -->
+        <!-- BRAND HEADER -->
         <div class="brand-header">
             <div class="brand-name">Elegance</div>
             <div class="gold-line"></div>
             <div class="brand-tagline">Salon & Spa Management</div>
         </div>
 
-        <!-- ===== CARD ===== -->
+        <!-- CARD -->
         <div class="card-box">
 
             <div class="card-title">Forgot Password?</div>
@@ -298,7 +298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 Enter your registered email address and we will send you a link to reset your password.
             </div>
 
-            <!-- ===== ERROR MESSAGE ===== -->
+            <!-- ERROR MESSAGE -->
             <?php if ($error): ?>
                 <div class="alert-custom alert-error">
                     <i class="bi bi-exclamation-circle-fill"></i>
@@ -306,7 +306,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <!-- ===== SUCCESS MESSAGE ===== -->
+            <!-- SUCCESS MESSAGE -->
             <?php if ($success): ?>
                 <div class="alert-custom alert-success">
                     <i class="bi bi-check-circle-fill"></i>
@@ -314,11 +314,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <!-- ===== FORM — hide after success ===== -->
+            <!-- FORM hide after success -->
             <?php if (!$success): ?>
                 <form method="POST" action="">
 
-                    <!-- --- Email --- -->
+                    <!-- Email -->
                     <div>
                         <label class="form-label-sm">Email Address</label>
                         <div class="input-wrap">
@@ -334,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
-                    <!-- --- Submit --- -->
+                    <!-- Submit -->
                     <button type="submit" class="btn-gold">
                         <i class="bi bi-send-fill"></i>
                         Send Reset Link
@@ -344,9 +344,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
         </div>
-        <!-- ===== END CARD ===== -->
+        <!-- END CARD -->
 
-        <!-- ===== BOTTOM LINK ===== -->
+        <!-- BOTTOM LINK -->
         <div class="bottom-link">
             Remember your password?
             <a href="<?php echo SITE_URL; ?>/login.php">Back to Login</a>
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 
-    <!-- ===== BOOTSTRAP JS ===== -->
+    <!-- BOOTSTRAP JS -->
     <script src="assets/js/bootstrap.bundle.min.js"></script>
 
 </body>

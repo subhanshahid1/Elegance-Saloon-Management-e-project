@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $stmt->bind_param("ssssss", $first_name, $last_name, $email, $phone, $subject, $message);
 
     if ($stmt->execute()) {
-        // --- NOTIFICATION LOGIC START ---
+        // NOTIFICATION LOGIC START
         $notif_title = "New Client Message";
         $notif_msg = "New inquiry from $first_name $last_name regarding $subject";
         $notif_link = "messages.php"; // The page we created in the previous step
@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Notify all Receptionists
         notifyRole($conn, 'receptionist', $notif_title, $notif_msg, 'message', $notif_link);
-        // --- NOTIFICATION LOGIC END ---
+        // NOTIFICATION LOGIC END
 
         header("Location: contact.php?msg=sent");
     } else {

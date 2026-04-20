@@ -1,29 +1,29 @@
 <?php
-/* ===== INCLUDE CONFIG & DB ===== */
+/* INCLUDE CONFIG & DB */
 require_once 'config/config.php';
 require_once 'includes/db.php';
 
-/* ===== REDIRECT IF ALREADY LOGGED IN ===== */
+/* REDIRECT IF ALREADY LOGGED IN */
 if (isset($_SESSION['user_id'])) {
     header('Location: ' . SITE_URL . '/dashboard/index.php');
     exit();
 }
 
-/* ===== LOGIN LOGIC ===== */
+/* LOGIN LOGIC */
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    /* --- GET AND CLEAN FORM DATA --- */
+    /* GET AND CLEAN FORM DATA */
     $email    = trim($_POST['email']);
     $password = trim($_POST['password']);
 
-    /* --- BASIC VALIDATION --- */
+    /* BASIC VALIDATION */
     if (empty($email) || empty($password)) {
         $error = 'Please enter your email and password.';
     } else {
 
-        /* --- FIND USER BY EMAIL --- */
+        /* FIND USER BY EMAIL */
         $email = mysqli_real_escape_string($conn, $email);
         $sql   = "SELECT * FROM users WHERE email = '$email' AND status = 'active' LIMIT 1";
         $result = mysqli_query($conn, $sql);
@@ -32,16 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $user = mysqli_fetch_assoc($result);
 
-            /* --- VERIFY PASSWORD --- */
+            /* VERIFY PASSWORD */
             if (password_verify($password, $user['password'])) {
 
-                /* --- SET SESSION VARIABLES --- */
+                /* SET SESSION VARIABLES */
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['role']      = $user['role'];
 
-                /* --- REDIRECT BASED ON ROLE --- */
+                /* REDIRECT BASED ON ROLE */
                 if ($user['role'] === 'client') {
                     header('Location: ' . SITE_URL . '/index.php');
                 } else {
@@ -62,22 +62,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
 
-    <!-- ===== META & TITLE ===== -->
+    <!-- META & TITLE -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | <?php echo SITE_NAME; ?></title>
 
-    <!-- ===== BOOTSTRAP 5 ===== -->
+    <!-- BOOTSTRAP 5 -->
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- ===== BOOTSTRAP ICONS ===== -->
+    <!-- BOOTSTRAP ICONS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
 
-    <!-- ===== GOOGLE FONTS ===== -->
+    <!-- GOOGLE FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet">
 
     <style>
-        /* ===== ROOT VARIABLES ===== */
+        /* ROOT VARIABLES */
         :root {
             --gold: #C9A84C;
             --gold-dark: #8B6914;
@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             --font-body: 'DM Sans', sans-serif;
         }
 
-        /* ===== BASE ===== */
+        /* BASE */
         * {
             margin: 0;
             padding: 0;
@@ -106,13 +106,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 30px 16px;
         }
 
-        /* ===== PAGE WRAPPER ===== */
+        /* PAGE WRAPPER */
         .login-wrapper {
             width: 100%;
             max-width: 420px;
         }
 
-        /* ===== BRAND HEADER ===== */
+        /* BRAND HEADER */
         .brand-header {
             text-align: center;
             margin-bottom: 32px;
@@ -140,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             text-transform: uppercase;
         }
 
-        /* ===== LOGIN CARD ===== */
+        /* LOGIN CARD */
         .login-card {
             background: white;
             border-radius: 18px;
@@ -162,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             margin-bottom: 26px;
         }
 
-        /* ===== FORM LABELS ===== */
+        /* FORM LABELS */
         .form-label-sm {
             font-size: 11px;
             font-weight: 500;
@@ -173,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: block;
         }
 
-        /* ===== FORM INPUTS ===== */
+        /* FORM INPUTS */
         .form-input {
             width: 100%;
             padding: 10px 14px 10px 38px;
@@ -192,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.08);
         }
 
-        /* ===== INPUT GROUP ===== */
+        /* INPUT GROUP */
         .input-group-custom {
             position: relative;
         }
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--gold);
         }
 
-        /* ===== SUBMIT BUTTON ===== */
+        /* SUBMIT BUTTON */
         .btn-gold {
             width: 100%;
             padding: 12px;
@@ -248,12 +248,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: var(--gold-dark);
         }
 
-        /* ===== FORM GAP ===== */
+        /* FORM GAP */
         .form-gap {
             margin-bottom: 16px;
         }
 
-        /* ===== ALERT MESSAGES ===== */
+        /* ALERT MESSAGES */
         .alert-custom {
             padding: 11px 14px;
             border-radius: 9px;
@@ -270,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #C0392B;
         }
 
-        /* ===== BOTTOM LINKS ===== */
+        /* BOTTOM LINKS */
         .bottom-link {
             text-align: center;
             margin-top: 22px;
@@ -307,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--gold);
         }
 
-        /* ===== ROLE HINT ===== */
+        /* ROLE HINT */
         .role-hint {
             background: rgba(201, 168, 76, 0.07);
             border: 1px solid rgba(201, 168, 76, 0.2);
@@ -327,26 +327,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="login-wrapper">
 
-        <!-- ===== BRAND HEADER ===== -->
+        <!-- BRAND HEADER -->
         <div class="brand-header">
             <div class="brand-name">Elegance</div>
             <div class="gold-line"></div>
             <div class="brand-tagline">Salon & Spa Management</div>
         </div>
 
-        <!-- ===== LOGIN CARD ===== -->
+        <!-- LOGIN CARD -->
         <div class="login-card">
 
             <div class="card-title">Welcome Back</div>
             <div class="card-subtitle">Sign in to your account to continue</div>
 
-            <!-- ===== ROLE HINT ===== -->
+            <!-- ROLE HINT -->
             <div class="role-hint">
                 <i class="bi bi-info-circle-fill"></i>
                 Staff accounts are created by admin only. Clients can register below.
             </div>
 
-            <!-- ===== ERROR MESSAGE ===== -->
+            <!-- ERROR MESSAGE -->
             <?php if ($error): ?>
                 <div class="alert-custom alert-error">
                     <i class="bi bi-exclamation-circle-fill"></i>
@@ -354,10 +354,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endif; ?>
 
-            <!-- ===== LOGIN FORM ===== -->
+            <!-- LOGIN FORM -->
             <form method="POST" action="">
 
-                <!-- --- Email --- -->
+                <!-- Email -->
                 <div class="form-gap">
                     <label class="form-label-sm">Email Address</label>
                     <div class="input-group-custom">
@@ -372,7 +372,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
-                <!-- --- Password --- -->
+                <!-- Password -->
                 <div class="form-gap">
                     <label class="form-label-sm">Password</label>
                     <div class="input-group-custom">
@@ -388,7 +388,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="bi bi-eye" id="eye-icon"></i>
                         </button>
                     </div>
-                    <!-- ===== FORGOT PASSWORD LINK — below input ===== -->
+                    <!-- FORGOT PASSWORD LINK — below input -->
                     <div style="text-align:right; margin-top:6px;">
                         <a href="<?php echo SITE_URL; ?>/forgot_password.php"
                             style="font-size:11px; color:var(--gold); text-decoration:none;">
@@ -398,19 +398,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
 
-                <!-- --- Submit --- -->
+                <!-- Submit -->
                 <button type="submit" class="btn-gold">
                     <i class="bi bi-box-arrow-in-right"></i>
                     Sign In
                 </button>
 
             </form>
-            <!-- ===== END LOGIN FORM ===== -->
+            <!-- END LOGIN FORM -->
 
         </div>
-        <!-- ===== END LOGIN CARD ===== -->
+        <!-- END LOGIN CARD -->
 
-        <!-- ===== BOTTOM LINKS ===== -->
+        <!-- BOTTOM LINKS -->
         <div class="bottom-link">
             Don't have an account?
             <a href="<?php echo SITE_URL; ?>/register.php">Register here</a>
@@ -424,11 +424,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     </div>
 
-    <!-- ===== BOOTSTRAP JS ===== -->
+    <!-- BOOTSTRAP JS -->
     <script src="assets/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // ===== TOGGLE PASSWORD VISIBILITY =====
+        // TOGGLE PASSWORD VISIBILITY
         function togglePass() {
             const field = document.getElementById('password');
             const icon = document.getElementById('eye-icon');
