@@ -10,7 +10,7 @@ $current_role = getUserRole();
 $totalClients = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'client'")->fetch_assoc()['total'] ?? 0;
 $newClients = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'client' AND month(created_at) = month(now()) AND year(created_at) = year(now())")->fetch_assoc()['total'] ?? 0;
 
-// 2. Fetch Clients - FIXED Query to ensure preferred_stylist_id is explicitly selected for the JS fillEdit function
+// 2. Fetch Clients 
 $sql = "SELECT c.*, s.name as stylist_name, 
         (SELECT MAX(apt_date) FROM appointments WHERE client_id = c.id AND status = 'completed') as last_visit
         FROM users c 

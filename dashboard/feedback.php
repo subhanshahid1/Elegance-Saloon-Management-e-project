@@ -3,8 +3,8 @@ require_once '../includes/auth.php';
 require_once '../includes/db.php';
 checkAccess(['admin']);
 
-// --- 1. ADMIN NOTIFICATION LOGIC ---
-// Automatically notify admin if there are new critical feedbacks (1-2 stars) 
+// 1. ADMIN NOTIFICATION LOGIC
+// This will automatically notify admin if there are new critical feedbacks (1-2 stars) 
 // that haven't been "read" yet.
 $critical_check = $conn->query("SELECT id, name, rating FROM feedbacks WHERE rating <= 2 AND created_at >= NOW() - INTERVAL 1 DAY");
 if ($critical_check->num_rows > 0) {

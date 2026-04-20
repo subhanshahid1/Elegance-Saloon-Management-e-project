@@ -54,7 +54,7 @@ if ($user_role === 'stylist') {
     $stock_q = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE quantity <= reorder_level");
     $low_stock_count = $stock_q->fetch_assoc()['count'];
 
-    // fixed : updated revenue logic to use created_at instead of payment_date 
+    
     if ($user_role === 'admin') {
         $rev_q = $conn->query("SELECT SUM(amount) as total FROM payments WHERE status = 'paid'");
     } else {

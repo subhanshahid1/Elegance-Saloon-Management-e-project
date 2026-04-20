@@ -25,7 +25,6 @@ if (isset($_POST['add_staff'])) {
         exit();
     }
 
-    // Removed 'status' to avoid errors if column doesn't exist, added 'phone'
     $sql = "INSERT INTO users (name, email, phone, password, role, commission_rate, work_schedule) 
             VALUES ('$name', '$email', '$phone', '$pass', '$role', $comm, '$sched')";
 

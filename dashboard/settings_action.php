@@ -5,7 +5,7 @@ require_once '../includes/db.php';
 $user_id = $_SESSION['user_id'];
 $action = $_POST['action'] ?? '';
 
-// --- ACTION: UPDATE PROFILE ---
+// ACTION: UPDATE PROFILE
 if ($action === 'update_profile') {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     $email = mysqli_real_escape_string($conn, $_POST['email']);
@@ -20,7 +20,7 @@ if ($action === 'update_profile') {
     }
 }
 
-// --- ACTION: UPDATE PASSWORD ---
+// ACTION: UPDATE PASSWORD
 if ($action === 'update_password') {
     $new_pass = $_POST['new_pass'];
     $confirm_pass = $_POST['confirm_pass'];
@@ -40,7 +40,7 @@ if ($action === 'update_password') {
     }
 }
 
-// --- ACTION: ADMIN GLOBAL SETTINGS ---
+// ACTION: ADMIN GLOBAL SETTINGS
 if ($action === 'update_salon' && getUserRole() === 'admin') {
     foreach ($_POST as $key => $value) {
         if ($key == 'action') continue;

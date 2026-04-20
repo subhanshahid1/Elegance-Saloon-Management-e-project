@@ -5,9 +5,9 @@ require_once '../includes/db.php';
 // Access Control
 checkAccess(['admin', 'receptionist']);
 
-/**
- * 1. DATA FETCHING & STATISTICS
- */
+
+// 1. DATA FETCHING & STATISTICS
+
 
 // Get total service count
 $totalServices = $conn->query("SELECT COUNT(*) as total FROM services")->fetch_assoc()['total'] ?? 0;
