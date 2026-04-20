@@ -1,9 +1,9 @@
 <?php
 
-/* Include configuration for SITE_URL and other constants */
+// this Include configuration for SITE_URL and other constants 
 require_once __DIR__ . '/../config/config.php';
 
-/* Authentication functions for session management */
+// Authentication functions for session management
 
 // Check if a session is active and a user ID is set
 function isLoggedIn()
@@ -46,7 +46,7 @@ function checkAccess($allowedRoles = [])
     }
 }
 
-/* Creates a notification for a specific user. */
+// Creates a notification for a specific user.
 function notifyUser($conn, $user_id, $title, $message, $type = 'general', $link = 'index.php')
 {
     // Prevent duplicate notifications for the same event
@@ -60,11 +60,8 @@ function notifyUser($conn, $user_id, $title, $message, $type = 'general', $link 
     return $stmt->execute();
 }
 
-/**
- * NEW FUNCTION: Notify by Role
- * Sends a notification to all users matching a specific role.
- * This does not impact existing notifyUser calls.
- */
+//   Sends a notification to all users matching a specific role.
+
 function notifyRole($conn, $role, $title, $message, $type = 'general', $link = 'index.php')
 {
     $stmt = $conn->prepare("SELECT id FROM users WHERE role = ?");
