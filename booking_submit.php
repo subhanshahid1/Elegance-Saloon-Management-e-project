@@ -23,7 +23,7 @@ try {
         throw new Exception('Please select a service, date, and time.');
     }
 
-    // --- GLOBAL CAPACITY CHECK (The Fix) ---
+    // GLOBAL CAPACITY CHECK (The Fix)
     
     // 1. Get total count of active stylists currently in the system
     $s_res = $conn->query("SELECT COUNT(*) as total FROM users WHERE role = 'stylist' AND status = 'active'");
@@ -40,7 +40,7 @@ try {
         throw new Exception('I am sorry, all our stylists are fully booked for this time slot.');
     }
 
-    // --- SPECIFIC STYLIST CHECK ---
+    // SPECIFIC STYLIST CHECK
     if ($stylist_id) {
         // Even if the salon isn't full, check if the specific person requested is busy
         $check = $conn->prepare("SELECT id FROM appointments WHERE apt_date = ? AND apt_time = ? AND stylist_id = ? AND status != 'cancelled'");
@@ -51,7 +51,7 @@ try {
         }
     }
 
-    // --- INSERT RECORD ---
+    // INSERT RECORD
     $stmt = $conn->prepare("INSERT INTO appointments (client_id, stylist_id, service_id, apt_date, apt_time, status, notes) VALUES (?, ?, ?, ?, ?, 'pending', ?)");
     $stmt->bind_param("iiisss", $client_id, $stylist_id, $service_id, $apt_date, $apt_time, $notes);
     
