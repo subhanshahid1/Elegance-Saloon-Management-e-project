@@ -1,0 +1,4 @@
+# Hide database connection file
+config/config.php
+
+
