@@ -670,7 +670,7 @@
 
                 <div class="circle-item">
                     <div class="circle-frame">
-                        <img src="https://images.unsplash.com/photo-1604654894610-df49ff668781?q=80&w=400" alt="Nails">
+                        <img src="assets/images/home5.png" alt="Nails">
                     </div>
                     <p>Nails</p>
                 </div>

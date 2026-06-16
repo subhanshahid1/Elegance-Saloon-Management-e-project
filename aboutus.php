@@ -445,18 +445,18 @@
         <div class="about-left">
           <div class="img-col">
             <div class="img-box tall">
-              <img src="Eimages/about1.jpg" alt="Elegance Saloon Interior">
+              <img src="assets/images/about1.jpg" alt="Elegance Saloon Interior">
             </div>
             <div class="img-box short">
-              <img src="Eimages/about3.jpg" alt="Styling">
+              <img src="assets/images/about4.jpg" alt="Styling">
             </div>
           </div>
           <div class="img-col" style="margin-top: 30px;">
             <div class="img-box short">
-              <img src="Eimages/about4.jpg" alt="Grooming">
+              <img src="assets/images/about2.jpg" alt="Grooming">
             </div>
             <div class="img-box tall">
-              <img src="Eimages/about2.jpg" alt="Expert Team">
+              <img src="assets/images/about3.jpg" alt="Expert Team">
             </div>
           </div>
         </div>
@@ -520,7 +520,7 @@
       </div>
 
       <div class="col-lg-6 vision-right order-1 order-lg-2">
-        <img src="Eimages/about5.jpg" alt="Elegance Saloon">
+        <img src="assets/images/carousel1.png" alt="Elegance Saloon">
       </div>
 
     </div>
@@ -580,7 +580,7 @@
       <div class="col-md-4">
         <div class="team-card">
           <div class="team-card-img">
-            <img src="Eimages/about6.jpg" alt="Ahmed Khan">
+            <img src="assets/images/employee1.png" alt="Ahmed Khan">
           </div>
           <div class="team-card-body">
             <h3>Ahmed Khan</h3>
@@ -593,7 +593,7 @@
       <div class="col-md-4">
         <div class="team-card">
           <div class="team-card-img">
-            <img src="Eimages/about7.jpg" alt="Sara Ali">
+            <img src="assets/images/employee2.jpg" alt="Sara Ali">
           </div>
           <div class="team-card-body">
             <h3>Sara Ali</h3>
@@ -606,7 +606,7 @@
       <div class="col-md-4">
         <div class="team-card">
           <div class="team-card-img">
-            <img src="Eimages/about8.jpg" alt="Zain Malik">
+            <img src="assets/images/employee3.jpg" alt="Zain Malik">
           </div>
           <div class="team-card-body">
             <h3>Zain Malik</h3>

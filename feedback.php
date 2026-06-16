@@ -32,7 +32,33 @@
             margin-bottom: 12px;
         }
 
-        /* ... rest of your CSS ... */
+        .breadcrumb-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-row a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .breadcrumb-row a:hover {
+            color: var(--primary-gold);
+        }
+
+        .breadcrumb-row span {
+            color: var(--primary-gold);
+        }
+
+
+
         .feedback-page {
             padding: 80px 0;
             background: var(--bg-black);
@@ -46,7 +72,7 @@
         }
 
         .feedback-visual {
-            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('Eimages/about5.jpg') center/cover no-repeat;
+            background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('assets/images/carousel2.png') center/cover no-repeat;
             min-height: 100%;
         }
 
