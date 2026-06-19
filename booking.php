@@ -50,6 +50,32 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
             margin: 0;
         }
 
+        .breadcrumb-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb-row a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .breadcrumb-row a:hover {
+            color: var(--primary-gold);
+        }
+
+        .breadcrumb-row span {
+            color: var(--primary-gold);
+        }
+
+
         .contact-section {
             padding: 90px 0;
             background: #000;
@@ -204,7 +230,7 @@ $stylists_res = mysqli_query($conn, "SELECT id, name FROM users WHERE role = 'st
         <h1>Reservations</h1>
         <div class="breadcrumb-row d-flex justify-content-center gap-2 text-uppercase" style="font-size:11px; letter-spacing: 1.5px;">
             <a href="index.php" class="text-decoration-none" style="color:#666;">Home</a>
-            <span style="color:#444;">›</span>
+            <span>&#8250;</span>
             <span class="text-gold">Booking</span>
         </div>
     </section>
