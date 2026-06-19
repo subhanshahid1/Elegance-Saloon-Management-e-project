@@ -49,15 +49,28 @@ function checkAccess($allowedRoles = [])
 // Creates a notification for a specific user.
 function notifyUser($conn, $user_id, $title, $message, $type = 'general', $link = 'index.php')
 {
+
+    if (empty($user_id) || $user_id == 0) {
+        $user_id = 1; 
+        $title = "[Guest] " . $title; // Optional: adds a tag so the admin knows it was a guest
+    }
+
     // Prevent duplicate notifications for the same event
     $check = $conn->prepare("SELECT id FROM notifications WHERE user_id = ? AND message = ? AND is_read = 0");
     $check->bind_param("is", $user_id, $message);
     $check->execute();
     if ($check->get_result()->num_rows > 0) return;
 
-    $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("issss", $user_id, $title, $message, $type, $link);
-    return $stmt->execute();
+    // Wrap in a try-catch to securely handle any unexpected database exceptions gracefully
+    try {
+        $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, type, link) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("issss", $user_id, $title, $message, $type, $link);
+        return $stmt->execute();
+    } catch (Exception $e) {
+        // To log the error secretly on the server instead of crashing the browser window
+        error_log("Notification Error: " . $e->getMessage());
+        return false;
+    }
 }
 
 //   Sends a notification to all users matching a specific role.
